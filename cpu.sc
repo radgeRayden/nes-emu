@@ -1,5 +1,15 @@
 using import struct
 using import Array
+using import enum
+
+enum StatusFlag : u8
+    Negative = 7
+    Overflow = 6
+    Break = 4
+    Decimal = 3
+    InterruptDisable = 2
+    Zero = 1
+    Carry = 0
 
 struct CPUState
     # registers
