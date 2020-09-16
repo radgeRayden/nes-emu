@@ -17,6 +17,13 @@ struct CPUState
         'resize self.iRAM 0xFFFF
         move (deref self)
 
+    inline... set-flag (self, flag : StatusFlag, v : bool)
+        let flag-bit = (flag as u8)
+        if v
+            self.RP |= (1:u8 << flag-bit)
+        else
+            self.RP &= (~ (1:u8 << flag-bit))
+
 global cpu : CPUState
 
 inline poke (addr value)
