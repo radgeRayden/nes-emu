@@ -4,10 +4,25 @@
 # addressing mode is specified together with its opcode.
 
 # NOTE: this is a mockup of what an instruction definition can look like.
-# Stores the contents of the X register into memory.
+""""Stores the contents of the X register into memory.
 instruction STX
     0x86 in zero-page
     0x96 in zero-pageY
     0x8E in absolute
 execute
-    poke op16 rx
+    operand = rx
+
+""""Each of the bits in A or M is shift one place to the right.
+    The bit that was in bit 0 is shifted into the carry flag.
+    Bit 7 is set to zero.
+instruction LSR
+    0x4A in accumulator
+    0x46 in zero-page
+    0x56 in zero-pageX
+    0x4E in absolute
+    0x5E in absoluteX
+execute
+    'set CF (operand & 0x1)
+    operand >>= 1
+    'set ZF (operand == 0)
+    'set ZN (operand & 0x80)

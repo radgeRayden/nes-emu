@@ -51,11 +51,7 @@ fn power-up ()
     cpu.RY = 0
     cpu.RS = 0xFD
 
-    poke 0x4017 0x0
-    poke 0x4015 0x0
-    for addr in (range 0x4000 (0x400F + 1))
-        poke addr 0
-    for addr in (range 0x4010 (0x4013 + 1))
-        poke addr 0
+fn decode-op (op)
+    import .opcodes
 
 power-up;
