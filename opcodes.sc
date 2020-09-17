@@ -138,10 +138,53 @@ sugar instruction (mnemonic opcodes...)
         default
             error "expected an `execute` block"
 
-    inline build-instruction-function (router)
+    fn get-instruction-length (addrmode)
+        switch ((storagecast addrmode) as i32 as AddressingMode)
+        case AddressingMode.Implicit
+            1
+        case AddressingMode.Accumulator
+            1
+        case AddressingMode.Immediate
+            2
+        case AddressingMode.ZeroPage
+            2
+        case AddressingMode.ZeroPageX
+            2
+        case AddressingMode.ZeroPageY
+            2
+        case AddressingMode.Relative
+            2
+        case AddressingMode.Absolute
+            3
+        case AddressingMode.AbsoluteX
+            3
+        case AddressingMode.AbsoluteY
+            3
+        case AddressingMode.Indirect
+            3
+        case AddressingMode.IndirectX
+            2
+        case AddressingMode.IndirectY
+            2
+        default
+            unreachable;
+
+    inline build-instruction-function (addressing-mode)
+        let router =
+            try
+                '@ operand-routers (addressing-mode as Symbol)
+            except (ex)
+                error
+                    .. "unrecognized addressing mode `"
+                        (tostring addressing-mode)
+                        "`, see documentation"
+
+        instruction-length := (get-instruction-length (addressing-mode as Symbol))
+
         qq
             fn (_opcode cpu lo hi)
                 [let] cpu = ([ptrtoref] cpu)
+                cpu.PC += [instruction-length]
                 [inline] fset (flag v)
                     'set-flag cpu flag v
 
@@ -176,18 +219,10 @@ sugar instruction (mnemonic opcodes...)
         fold (result = '()) for op in (opcodes... as list)
             sugar-match (op as list)
             case ((code as i32) '-> addressing-mode)
-                let router =
-                    try
-                        '@ operand-routers (addressing-mode as Symbol)
-                    except (ex)
-                        error
-                            .. "unrecognized addressing mode `"
-                                (tostring addressing-mode)
-                                "`, see documentation"
                 cons
                     qq
                         [gen-opcode-table-entry] [code] [mnemonic] (sugar-quote [addressing-mode])
-                            [(build-instruction-function router)]
+                            [(build-instruction-function addressing-mode)]
                     result
 
             default
