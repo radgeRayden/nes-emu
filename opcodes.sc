@@ -247,91 +247,96 @@ sugar instruction (mnemonic opcodes...)
 
 run-stage;
 
-""""Add with Carry
-instruction ADC
-    0x69 -> immediate
-    0x65 -> zero-page
-    0x75 -> zero-pageX
-    0x6D -> absolute
-    0x7D -> absoluteX
-    0x79 -> absoluteY
-    0x61 -> indirectX
-    0x71 -> indirectY
-execute
-    temp := (acc as u16) + operand
-    fset CF (temp > 0xFF)
-    acc = (temp as u8)
-    # fset VF ???
-    fset ZF (acc == 0)
-    fset NF (acc & 0x80)
+# we need to do this in a function so it also works AOT, otherwise it
+# will be compile-time only.
+fn init-instructions ()
+    """"Add with Carry
+    instruction ADC
+        0x69 -> immediate
+        0x65 -> zero-page
+        0x75 -> zero-pageX
+        0x6D -> absolute
+        0x7D -> absoluteX
+        0x79 -> absoluteY
+        0x61 -> indirectX
+        0x71 -> indirectY
+    execute
+        temp := (acc as u16) + operand
+        fset CF (temp > 0xFF)
+        acc = (temp as u8)
+        # fset VF ???
+        fset ZF (acc == 0)
+        fset NF (acc & 0x80)
 
-""""Jump
-instruction JMP
-    0x4C -> absolute
-    0x6C -> indirect
-execute
-    pc = operand
+    """"Jump
+    instruction JMP
+        0x4C -> absolute
+        0x6C -> indirect
+    execute
+        pc = operand
 
-""""Load Accumulator
-instruction LDA
-    0xA9 -> immediate
-    0xA5 -> zero-page
-    0xB5 -> zero-pageX
-    0xAD -> absolute
-    0xBD -> absoluteX
-    0xB9 -> absoluteY
-    0xA1 -> indirectX
-    0xB1 -> indirectY
-execute
-    acc = operand
-    fset ZF (acc == 0)
-    fset NF (acc & 0x80)
+    """"Load Accumulator
+    instruction LDA
+        0xA9 -> immediate
+        0xA5 -> zero-page
+        0xB5 -> zero-pageX
+        0xAD -> absolute
+        0xBD -> absoluteX
+        0xB9 -> absoluteY
+        0xA1 -> indirectX
+        0xB1 -> indirectY
+    execute
+        acc = operand
+        fset ZF (acc == 0)
+        fset NF (acc & 0x80)
 
-""""Load X Register
-instruction LDX
-    0xA2 -> immediate
-    0xA6 -> zero-page
-    0xB6 -> zero-pageY
-    0xAE -> absolute
-    0xBE -> absoluteY
-execute
-    rx = operand
-    fset ZF (rx == 0)
-    fset NF (rx & 0x80)
+    """"Load X Register
+    instruction LDX
+        0xA2 -> immediate
+        0xA6 -> zero-page
+        0xB6 -> zero-pageY
+        0xAE -> absolute
+        0xBE -> absoluteY
+    execute
+        rx = operand
+        fset ZF (rx == 0)
+        fset NF (rx & 0x80)
 
-""""Logical Shift Right
-instruction LSR
-    0x4A -> accumulator
-    0x46 -> zero-page
-    0x56 -> zero-pageX
-    0x4E -> absolute
-    0x5E -> absoluteX
-execute
-    fset CF (operand & 0x1)
-    operand >>= 1
-    fset ZF (operand == 0)
-    fset NF (operand & 0x80)
+    """"Logical Shift Right
+    instruction LSR
+        0x4A -> accumulator
+        0x46 -> zero-page
+        0x56 -> zero-pageX
+        0x4E -> absolute
+        0x5E -> absoluteX
+    execute
+        fset CF (operand & 0x1)
+        operand >>= 1
+        fset ZF (operand == 0)
+        fset NF (operand & 0x80)
 
-""""Store Accumulator
-instruction STA
-    0x85 -> zero-page
-    0x95 -> zero-pageX
-    0x8D -> absolute
-    0x9D -> absoluteX
-    0x99 -> absoluteY
-    0x81 -> indirectX
-    0x91 -> indirectY
-execute
-    operand = acc
+    """"Store Accumulator
+    instruction STA
+        0x85 -> zero-page
+        0x95 -> zero-pageX
+        0x8D -> absolute
+        0x9D -> absoluteX
+        0x99 -> absoluteY
+        0x81 -> indirectX
+        0x91 -> indirectY
+    execute
+        operand = acc
 
-""""Store X Register
-instruction STX
-    0x86 -> zero-page
-    0x96 -> zero-pageY
-    0x8E -> absolute
-execute
-    operand = rx
+    """"Store X Register
+    instruction STX
+        0x86 -> zero-page
+        0x96 -> zero-pageY
+        0x8E -> absolute
+    execute
+        operand = rx
+
+init-instructions;
 
 do
-    let opcode-table
+    let opcode-table init-instructions
     locals;
