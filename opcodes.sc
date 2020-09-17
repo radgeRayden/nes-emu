@@ -210,7 +210,7 @@ execute
     fset ZF (rx == 0)
     fset NF (rx & 0x80)
 
-""""Stores the contents of the X register into memory.
+""""Store X Register
 instruction STX
     0x86 -> zero-page
     0x96 -> zero-pageY
@@ -218,9 +218,7 @@ instruction STX
 execute
     operand = rx
 
-""""Each of the bits in A or M is shift one place to the right.
-    The bit that was in bit 0 is shifted into the carry flag.
-    Bit 7 is set to zero.
+""""Logical Shift Right
 instruction LSR
     0x4A -> accumulator
     0x46 -> zero-page
