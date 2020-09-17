@@ -46,10 +46,25 @@ inline make-instruction-fpT (T)
     # void <- _opcode, cpu-state, low, high
     pointer (function void (pointer T) (viewof (mutable@ CPUState) 2) u8 u8)
 
+enum AddressingMode plain
+    Implicit = 'implicit
+    Accumulator = 'accumulator
+    Immediate = 'immediate
+    ZeroPage = 'zero-page
+    ZeroPageX = 'zero-pageX
+    ZeroPageY = 'zero-pageY
+    Relative = 'relative
+    Absolute = 'absolute
+    AbsoluteX = 'absoluteX
+    AbsoluteY = 'absoluteY
+    Indirect = 'indirect
+    IndirectX = 'indirectX
+    IndirectY = 'indirectY
+
 struct OpCode plain
     byte     : u8
     mnemonic : string
-    addrmode : string
+    addrmode : AddressingMode
     fun      : (make-instruction-fpT this-type)
    
 fn NYI-instruction (_opcode cpu low high)
@@ -62,7 +77,7 @@ for i in (range 256)
         OpCode
             byte = (i as u8)
             mnemonic = "NYI"
-            addrmode = "implicit"
+            addrmode = AddressingMode.Implicit
             fun = NYI-instruction
 
 inline join16 (lo hi)
@@ -154,7 +169,7 @@ sugar instruction (mnemonic opcodes...)
             OpCode
                 byte = (opcode as u8)
                 fun = fun
-                addrmode = addrmode
+                addrmode = ((storagecast addrmode) as i32 as AddressingMode)
                 mnemonic = mnemonic
 
     let result =
@@ -171,7 +186,7 @@ sugar instruction (mnemonic opcodes...)
                                 "`, see documentation"
                 cons
                     qq
-                        [gen-opcode-table-entry] [code] [mnemonic] [(tostring addressing-mode)]
+                        [gen-opcode-table-entry] [code] [mnemonic] (sugar-quote [addressing-mode])
                             [(build-instruction-function router)]
                     result
 
