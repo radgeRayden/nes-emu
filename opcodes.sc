@@ -3,6 +3,8 @@
 # - a sugar to define an instruction, perhaps it can be grouped by mnemonic then each
 # addressing mode is specified together with its opcode.
 
+using import radlib.core-extensions
+
 using import struct
 using import enum
 using import Array
@@ -22,7 +24,7 @@ struct OpCode plain
     mnemonic : string
     fun      : (make-instruction-fpT this-type)
    
-fn NYI-instruction (_opcode cpu next-bytes)
+fn NYI-instruction (_opcode cpu low high)
     print "this instruction is illegal or not yet implemented." _opcode.byte
     ;
 
@@ -34,25 +36,49 @@ for i in (range 255)
             mnemonic = "NYI"
             fun = NYI-instruction
 
+define-scope operand-routers
+    inline implicit (cpu lo hi)
+        ;
+
+    inline accumulator (cpu lo hi)
+        cpu.RA
+
+    inline immediate (cpu lo hi)
+        ;
+
+    inline zero-page (cpu lo hi)
+        ;
+
+    inline zero-pageX (cpu lo hi)
+        ;
+
+    inline zero-pageY (cpu lo hi)
+        ;
+
+    inline relative (cpu lo hi)
+        ;
+
+    inline absolute (cpu lo hi)
+        lo
+
+    inline absoluteX (cpu lo hi)
+        ;
+
+    inline absoluteY (cpu lo hi)
+        ;
+
+    inline indirect (cpu lo hi)
+        ;
+
+    inline indexed-indirect (cpu lo hi)
+        ;
+
+    inline indirect-indexed (cpu lo hi)
+        ;
+       
 sugar instruction (mnemonic opcodes...)
+    let mnemonic = (mnemonic as Symbol as string)
     let next rest = (decons next-expr)
-    for op in (opcodes... as list)
-        sugar-match (op as list)
-        case ((code as i32) '-> 'implicit)
-        case ((code as i32) '-> 'accumulator)
-        case ((code as i32) '-> 'immediate)
-        case ((code as i32) '-> 'zero-page)
-        case ((code as i32) '-> 'zero-pageX)
-        case ((code as i32) '-> 'zero-pageY)
-        case ((code as i32) '-> 'relative)
-        case ((code as i32) '-> 'absolute)
-        case ((code as i32) '-> 'absoluteX)
-        case ((code as i32) '-> 'absoluteY)
-        case ((code as i32) '-> 'indirect)
-        case ((code as i32) '-> 'indexed-indirect)
-        case ((code as i32) '-> 'indirect-indexed)
-        default
-            print op
     if (('typeof next) != list)
         error "expected an `execute` block"
 
@@ -63,8 +89,7 @@ sugar instruction (mnemonic opcodes...)
         default
             error "expected an `execute` block"
 
-    # build function
-    let fun =
+    inline build-instruction-function (router)
         qq
             fn (_opcode cpu lo hi)
                 [let] cpu = ([ptrtoref] cpu)
@@ -84,17 +109,45 @@ sugar instruction (mnemonic opcodes...)
                 [let] IF = StatusFlag.InterruptDisable
                 [let] ZF = StatusFlag.Zero
                 [let] CF = StatusFlag.Carry
+
+                [let] operand = ([router] cpu lo hi)
                 [unlet] cpu lo hi
+
                 unquote-splice instruction-code
-    _ () rest
+
+    inline gen-opcode-table-entry (opcode fun)
+        qq
+            ([@] [opcode-table] [(opcode as u8)]) =
+                [OpCode]
+                    byte = [(opcode as u8)]
+                    fun = [fun]
+                    mnemonic = [mnemonic]
+
+    let result =
+        fold (result = '()) for op in (opcodes... as list)
+            sugar-match (op as list)
+            case ((code as i32) '-> addressing-mode)
+                let router =
+                    try
+                        '@ operand-routers (addressing-mode as Symbol)
+                    except (ex)
+                        error "unrecognized addressing mode, see documentation"
+                cons
+                    gen-opcode-table-entry code
+                        build-instruction-function router
+                    result
+
+            default
+                error "incorrect syntax. Should be [opcode] -> [addressing-mode]"
+    _ (cons 'embed result) rest
 
 run-stage;
 
 # NOTE: this is a mockup of what an instruction definition can look like.
 """"Stores the contents of the X register into memory.
 instruction STX
-    0x86 -> zero-page
-    0x96 -> zero-pageY
+    # 0x86 -> zero-page
+    # 0x96 -> zero-pageY
     0x8E -> absolute
 execute
     operand = rx
@@ -104,15 +157,15 @@ execute
     Bit 7 is set to zero.
 instruction LSR
     0x4A -> accumulator
-    0x46 -> zero-page
-    0x56 -> zero-pageX
-    0x4E -> absolute
-    0x5E -> absoluteX
+    # 0x46 -> zero-page
+    # 0x56 -> zero-pageX
+    # 0x4E -> absolute
+    # 0x5E -> absoluteX
 execute
     fset CF (operand & 0x1)
     operand >>= 1
     fset ZF (operand == 0)
-    fset ZN (operand & 0x80)
+    fset NF (operand & 0x80)
 
 # example of a generated opcode function:
 # fn OpCode0x4A (cpu)

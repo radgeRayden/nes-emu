@@ -2,7 +2,7 @@ using import struct
 using import enum
 using import Array
 
-enum StatusFlag
+enum StatusFlag plain
     Negative = 7
     Overflow = 6
     Break = 4
