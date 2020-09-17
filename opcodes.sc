@@ -53,7 +53,7 @@ fn NYI-instruction (_opcode cpu low high)
     ;
 
 global opcode-table : (Array OpCode)
-for i in (range 255)
+for i in (range 256)
     'append opcode-table
         OpCode
             byte = (i as u8)
