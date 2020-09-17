@@ -115,13 +115,12 @@ sugar instruction (mnemonic opcodes...)
 
                 unquote-splice instruction-code
 
-    inline gen-opcode-table-entry (opcode fun)
-        qq
-            ([@] [opcode-table] [(opcode as u8)]) =
-                [OpCode]
-                    byte = [(opcode as u8)]
-                    fun = [fun]
-                    mnemonic = [mnemonic]
+    inline gen-opcode-table-entry (opcode mnemonic fun)
+        opcode-table @ (opcode as u8) =
+            OpCode
+                byte = (opcode as u8)
+                fun = fun
+                mnemonic = mnemonic
 
     let result =
         fold (result = '()) for op in (opcodes... as list)
@@ -133,8 +132,9 @@ sugar instruction (mnemonic opcodes...)
                     except (ex)
                         error "unrecognized addressing mode, see documentation"
                 cons
-                    gen-opcode-table-entry code
-                        build-instruction-function router
+                    qq
+                        [gen-opcode-table-entry] [code] [mnemonic]
+                            [(build-instruction-function router)]
                     result
 
             default
