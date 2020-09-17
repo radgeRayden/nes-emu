@@ -2,7 +2,7 @@ using import struct
 using import Array
 using import enum
 
-using import .cpustate
+using import .common
 import .opcodes
 
 global cpu : CPUState

@@ -7,7 +7,7 @@ using import struct
 using import enum
 using import Array
 
-using import .cpustate
+using import .common
 
 struct OpCode plain
     byte     : u8
