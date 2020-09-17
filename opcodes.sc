@@ -61,6 +61,13 @@ enum AddressingMode plain
     IndirectX = 'indirectX
     IndirectY = 'indirectY
 
+    inline __rimply (lhsT rhsT)
+        static-if (lhsT == Symbol)
+            inline (other)
+                (storagecast other) as i32 as this-type
+        else
+            super-type.__rimply lhsT rhsT
+
 struct OpCode plain
     byte     : u8
     mnemonic : string
@@ -139,7 +146,7 @@ sugar instruction (mnemonic opcodes...)
             error "expected an `execute` block"
 
     fn get-instruction-length (addrmode)
-        switch ((storagecast addrmode) as i32 as AddressingMode)
+        switch (addrmode as AddressingMode)
         case AddressingMode.Implicit
             1
         case AddressingMode.Accumulator
@@ -212,7 +219,7 @@ sugar instruction (mnemonic opcodes...)
             OpCode
                 byte = (opcode as u8)
                 fun = fun
-                addrmode = ((storagecast addrmode) as i32 as AddressingMode)
+                addrmode = addrmode
                 mnemonic = mnemonic
 
     let result =
