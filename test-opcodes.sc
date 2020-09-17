@@ -3,8 +3,12 @@ using import .common
 import .opcodes
 global cpu : CPUState
 
+fn fmt-hex (i)
+    sc_default_styler 'style-number (.. "0x" (hex i))
+
 inline decode (code lo hi)
     local opcode = (opcodes.opcode-table @ code)
+    print opcode.mnemonic (fmt-hex opcode.byte)
     opcode.fun &opcode &cpu lo hi
 
 # NOTE: these tests are non exhaustive, and meant to test
@@ -38,3 +42,23 @@ do
     cpu.mmem @ 0x2242 = 0xBE
     decode 0x4E 0x42 0x22 # LSR $2242
     test ((cpu.mmem @ 0x2242) == 0x5F)
+
+do
+    cpu = (CPUState)
+    local program =
+        arrayof u8 0xa9 0x01 0x8d 0x00 0x02 0xa9 0x05 0x8d 0x01 0x02 0xa9 0x08 0x8d 0x02 0x02
+
+    inline fetch ()
+        pc := cpu.PC
+        op := program @ pc
+        let lo =
+            ? ((pc + 1) < (countof program)) (program @ (pc + 1)) 0x00:u8
+        let hi =
+            ? ((pc + 2) < (countof program)) (program @ (pc + 2)) 0x00:u8
+        _ op lo hi
+
+    loop ()
+        if (cpu.PC >= (countof program))
+            print "finished"
+            break;
+        decode (fetch)
