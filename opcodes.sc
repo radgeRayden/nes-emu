@@ -3,6 +3,19 @@
 # - a sugar to define an instruction, perhaps it can be grouped by mnemonic then each
 # addressing mode is specified together with its opcode.
 
+using import struct
+using import enum
+using import Array
+
+using import .cpustate
+
+struct OpCode plain
+    byte     : u8
+    mnemonic : string
+    fun      : (pointer (function void CPUState))
+   
+global opcode-table : (Array OpCode)
+
 sugar instruction (mnemonic opcodes...)
     let next rest = (decons next-expr)
     for op in (opcodes... as list)
@@ -28,11 +41,32 @@ sugar instruction (mnemonic opcodes...)
     let instruction-code =
         sugar-match (next as list)
         case ('execute body...)
-            qq
-                [inline] [mnemonic] (operand)
-                    unquote-splice body...
+            body...
         default
             error "expected an `execute` block"
+
+    # build function
+    let fun =
+        qq
+            fn (cpu)
+                [let]
+                [inline] fset (flag v)
+                    'set-flag cpu flag v
+
+                [let] acc = cpu.RA
+                [let] rx  = cpu.RX
+                [let] ry  = cpu.RY
+                [let] pc  = cpu.PC
+                [let] sp  = cpu.RS
+
+                [let] NF = StatusFlag.Negative
+                [let] OF = StatusFlag.Overflow
+                [let] BF = StatusFlag.Break
+                [let] DF = StatusFlag.Decimal
+                [let] IF = StatusFlag.InterruptDisable
+                [let] ZF = StatusFlag.Zero
+                [let] CF = StatusFlag.Carry
+                unquote-splice instruction-code
     _ () rest
 
 run-stage;
@@ -50,11 +84,11 @@ execute
     The bit that was in bit 0 is shifted into the carry flag.
     Bit 7 is set to zero.
 instruction LSR
-    0x4A in accumulator
-    0x46 in zero-page
-    0x56 in zero-pageX
-    0x4E in absolute
-    0x5E in absoluteX
+    0x4A -> accumulator
+    0x46 -> zero-page
+    0x56 -> zero-pageX
+    0x4E -> absolute
+    0x5E -> absoluteX
 execute
     fset CF (operand & 0x1)
     operand >>= 1
@@ -86,3 +120,7 @@ execute
 #     operand >>= 1
 #     fset ZF (operand == 0)
 #     fset ZN (operand & 0x80)
+
+do
+    let opcode-table
+    locals;
