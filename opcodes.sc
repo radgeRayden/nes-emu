@@ -124,14 +124,22 @@ define-scope operand-routers
         AbsoluteOperand ((join16 lo hi) + cpu.RY) cpu
 
     inline indirect (cpu lo hi)
-        ;
+        # fetch 2 bytes at the indirect address provided
+        iaddr := (join16 lo hi)
+        let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
+        # return the location stored at this address
+        MemoryAddress (join16 rl rh)
 
     inline indirectX (cpu lo hi)
-        ;
+        iaddr := (join16 (lo + cpu.RX) 0x00)
+        let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
+        AbsoluteOperand (join16 rl rh) cpu
 
     inline indirectY (cpu lo hi)
-        ;
-       
+        iaddr := (join16 lo 0x00)
+        let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
+        AbsoluteOperand ((join16 rl rh) + cpu.RY) cpu
+      
 sugar instruction (mnemonic opcodes...)
     let mnemonic = (mnemonic as Symbol as string)
     let next rest = (decons next-expr)
@@ -246,8 +254,8 @@ instruction ADC
     0x6D -> absolute
     0x7D -> absoluteX
     0x79 -> absoluteY
-    # 0x61 -> indirectX
-    # 0x71 -> indirectY
+    0x61 -> indirectX
+    0x71 -> indirectY
 execute
     temp := (acc as u16) + (imply operand u8)
     fset CF (temp > 0xFF)
@@ -259,7 +267,7 @@ execute
 """"Jump
 instruction JMP
     0x4C -> absolute
-    # 0x6C -> indirect
+    0x6C -> indirect
 execute
     pc = operand
 
