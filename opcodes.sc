@@ -62,7 +62,7 @@ define-scope operand-routers
         ;
 
     inline absolute (cpu lo hi)
-        cpu.iRAM @ (join16 lo hi)
+        cpu.mmem @ (join16 lo hi)
 
     inline absoluteX (cpu lo hi)
         ;
