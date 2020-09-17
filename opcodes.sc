@@ -50,7 +50,7 @@ define-scope operand-routers
         lo
 
     inline zero-page (cpu lo hi)
-        ;
+        cpu.mmem @ (join16 lo 0x00)
 
     inline zero-pageX (cpu lo hi)
         ;
@@ -152,7 +152,7 @@ run-stage;
 """"Add with Carry
 instruction ADC
     0x69 -> immediate
-    # 0x65 -> zero-page
+    0x65 -> zero-page
     # 0x75 -> zero-pageX
     0x6D -> absolute
     # 0x7D -> absoluteX
@@ -167,9 +167,21 @@ execute
     fset ZF (acc == 0)
     fset NF (acc & 0x80)
 
+""""Load X Register
+instruction LDX
+    0xA2 -> immediate
+    0xA6 -> zero-page
+    # 0xB6 -> zero-pageY
+    0xAE -> absolute
+    # 0xBE -> absoluteY
+execute
+    rx = operand
+    fset ZF (rx == 0)
+    fset NF (rx & 0x80)
+
 """"Stores the contents of the X register into memory.
 instruction STX
-    # 0x86 -> zero-page
+    0x86 -> zero-page
     # 0x96 -> zero-pageY
     0x8E -> absolute
 execute
@@ -180,7 +192,7 @@ execute
     Bit 7 is set to zero.
 instruction LSR
     0x4A -> accumulator
-    # 0x46 -> zero-page
+    0x46 -> zero-page
     # 0x56 -> zero-pageX
     # 0x4E -> absolute
     # 0x5E -> absoluteX
