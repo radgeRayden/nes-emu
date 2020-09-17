@@ -49,6 +49,7 @@ inline make-instruction-fpT (T)
 struct OpCode plain
     byte     : u8
     mnemonic : string
+    addrmode : string
     fun      : (make-instruction-fpT this-type)
    
 fn NYI-instruction (_opcode cpu low high)
@@ -61,6 +62,7 @@ for i in (range 256)
         OpCode
             byte = (i as u8)
             mnemonic = "NYI"
+            addrmode = "implicit"
             fun = NYI-instruction
 
 inline join16 (lo hi)
@@ -147,11 +149,12 @@ sugar instruction (mnemonic opcodes...)
 
                 unquote-splice instruction-code
 
-    inline gen-opcode-table-entry (opcode mnemonic fun)
+    inline gen-opcode-table-entry (opcode mnemonic addrmode fun)
         opcode-table @ (opcode as u8) =
             OpCode
                 byte = (opcode as u8)
                 fun = fun
+                addrmode = addrmode
                 mnemonic = mnemonic
 
     let result =
@@ -168,7 +171,7 @@ sugar instruction (mnemonic opcodes...)
                                 "`, see documentation"
                 cons
                     qq
-                        [gen-opcode-table-entry] [code] [mnemonic]
+                        [gen-opcode-table-entry] [code] [mnemonic] [(tostring addressing-mode)]
                             [(build-instruction-function router)]
                     result
 
