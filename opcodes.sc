@@ -149,7 +149,24 @@ sugar instruction (mnemonic opcodes...)
 
 run-stage;
 
-# NOTE: this is a mockup of what an instruction definition can look like.
+""""Add with Carry
+instruction ADC
+    0x69 -> immediate
+    # 0x65 -> zero-page
+    # 0x75 -> zero-pageX
+    0x6D -> absolute
+    # 0x7D -> absoluteX
+    # 0x79 -> absoluteY
+    # 0x61 -> indirectX
+    # 0x71 -> indirectY
+execute
+    temp := (acc as u16) + operand
+    fset CF (temp > 0xFF)
+    acc = (temp as u8)
+    # fset ZV ???
+    fset ZF (acc == 0)
+    fset NF (acc & 0x80)
+
 """"Stores the contents of the X register into memory.
 instruction STX
     # 0x86 -> zero-page
