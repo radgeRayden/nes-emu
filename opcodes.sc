@@ -26,17 +26,17 @@ struct AbsoluteOperand
             mmemptr = cpu.mmem._items
 
     inline __= (lhsT rhsT)
-        static-if (rhsT == u8)
+        static-if (rhsT < integer)
             inline (lhs rhs)
-                lhs.mmemptr @ lhs.addr = rhs
+                lhs.mmemptr @ lhs.addr = (rhs as u8)
 
     inline __imply (lhsT rhsT)
-        static-if (rhsT == u8)
-            inline (lhs rhs)
-                deref (lhs.mmemptr @ lhs.addr)
+        static-if (imply? u8 rhsT)
+            inline (self)
+                imply (self.mmemptr @ self.addr) rhsT
         elseif (rhsT == MemoryAddress)
-            inline (lhs rhs)
-                lhs.addr as MemoryAddress
+            inline (self)
+                self.addr as MemoryAddress
 
 """"The instruction wrapper:
     Takes the OpCode itself (for debugging purposes), a view of the cpu state so it
@@ -258,7 +258,7 @@ instruction ADC
     0x61 -> indirectX
     0x71 -> indirectY
 execute
-    temp := (acc as u16) + (imply operand u8)
+    temp := (acc as u16) + operand
     fset CF (temp > 0xFF)
     acc = (temp as u8)
     # fset VF ???
@@ -307,10 +307,10 @@ instruction LSR
     0x4E -> absolute
     0x5E -> absoluteX
 execute
-    fset CF (operand & 0x1:u8)
-    operand >>= 1:u8
-    fset ZF (operand == 0:u8)
-    fset NF (operand & 0x80:u8)
+    fset CF (operand & 0x1)
+    operand >>= 1
+    fset ZF (operand == 0)
+    fset NF (operand & 0x80)
 
 """"Store Accumulator
 instruction STA
