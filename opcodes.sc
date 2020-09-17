@@ -272,6 +272,21 @@ instruction JMP
 execute
     pc = operand
 
+""""Load Accumulator
+instruction LDA
+    0xA9 -> immediate
+    0xA5 -> zero-page
+    0xB5 -> zero-pageX
+    0xAD -> absolute
+    0xBD -> absoluteX
+    0xB9 -> absoluteY
+    0xA1 -> indirectX
+    0xB1 -> indirectY
+execute
+    acc = operand
+    fset ZF (acc == 0)
+    fset NF (acc & 0x80)
+
 """"Load X Register
 instruction LDX
     0xA2 -> immediate
@@ -296,6 +311,18 @@ execute
     operand >>= 1:u8
     fset ZF (operand == 0:u8)
     fset NF (operand & 0x80:u8)
+
+""""Store Accumulator
+instruction STA
+    0x85 -> zero-page
+    0x95 -> zero-pageX
+    0x8D -> absolute
+    0x9D -> absoluteX
+    0x99 -> absoluteY
+    0x81 -> indirectX
+    0x91 -> indirectY
+execute
+    operand = acc
 
 """"Store X Register
 instruction STX
