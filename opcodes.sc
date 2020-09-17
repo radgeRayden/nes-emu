@@ -11,6 +11,35 @@ using import Array
 
 using import .common
 
+""""This type is used in `absolute` addressing modes to represent
+    a 16-bit wide operand that can be both a literal u16 memory location,
+    or a reference to this location in cpu memory. Whenever assigned to it will
+    store the value on mmem @ addr; if implied to u8 will become the value at mem @ addr.
+    This means that on instructions that can be written with absolute addressing mode,
+    operations with `operand` must observe these rules.
+    Since it needs to be able to address mapped memory, it stores a pointer to it. It's never
+    meant to survive past the instruction execution, so it _should_ never become stale. To get
+    as much safety as we can in this situation we assert that the mmem has been resized
+    so that the full 64Kb are addressable.
+struct MemoryLocation
+    addr    : u16
+    mmemptr : (mutable@ u8)
+    inline __typecall (cls addr cpu)
+        assert ((countof cpu.mmem) == 0xFFFF)
+        super-type.__typecall cls
+            addr = addr
+            mmemptr = cpu.mmem._items
+
+    inline __= (lhsT rhsT)
+        static-if (rhsT == u8)
+            inline (lhs rhs)
+                lhs.mmemptr @ lhs.addr = rhs
+
+    inline __imply (lhsT rhsT)
+        static-if (rhsT == u8)
+            inline (lhs rhs)
+                deref (lhs.mmemptr @ lhs.addr)
+
 """"The instruction wrapper:
     Takes the OpCode itself (for debugging purposes), a view of the cpu state so it
     can mutate it and the next two bytes after the opcode in memory,
@@ -61,16 +90,16 @@ define-scope operand-routers
         cpu.mmem @ (join16 (lo + cpu.RY) 0x00)
 
     inline relative (cpu lo hi)
-        ;
+        lo as i8
 
     inline absolute (cpu lo hi)
-        cpu.mmem @ (join16 lo hi)
+        MemoryLocation (join16 lo hi) cpu
 
     inline absoluteX (cpu lo hi)
-        cpu.mmem @ ((join16 lo hi) + cpu.RX)
+        MemoryLocation ((join16 lo hi) + cpu.RX) cpu
 
     inline absoluteY (cpu lo hi)
-        cpu.mmem @ ((join16 lo hi) + cpu.RY)
+        MemoryLocation ((join16 lo hi) + cpu.RY) cpu
 
     inline indirect (cpu lo hi)
         ;
@@ -162,7 +191,7 @@ instruction ADC
     # 0x61 -> indirectX
     # 0x71 -> indirectY
 execute
-    temp := (acc as u16) + operand
+    temp := (acc as u16) + (imply operand u8)
     fset CF (temp > 0xFF)
     acc = (temp as u8)
     # fset VF ???
@@ -175,7 +204,7 @@ instruction LDX
     0xA6 -> zero-page
     0xB6 -> zero-pageY
     0xAE -> absolute
-    # 0xBE -> absoluteY
+    0xBE -> absoluteY
 execute
     rx = operand
     fset ZF (rx == 0)
@@ -196,13 +225,13 @@ instruction LSR
     0x4A -> accumulator
     0x46 -> zero-page
     0x56 -> zero-pageX
-    # 0x4E -> absolute
-    # 0x5E -> absoluteX
+    0x4E -> absolute
+    0x5E -> absoluteX
 execute
-    fset CF (operand & 0x1)
-    operand >>= 1
-    fset ZF (operand == 0)
-    fset NF (operand & 0x80)
+    fset CF (operand & 0x1:u8)
+    operand >>= 1:u8
+    fset ZF (operand == 0:u8)
+    fset NF (operand & 0x80:u8)
 
 do
     let opcode-table
