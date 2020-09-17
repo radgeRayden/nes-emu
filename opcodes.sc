@@ -1,8 +1,3 @@
-# we need:
-# - an Opcode table, that decodes an opcode to a function. Maybe it can be a big switch?
-# - a sugar to define an instruction, perhaps it can be grouped by mnemonic then each
-# addressing mode is specified together with its opcode.
-
 using import radlib.core-extensions
 
 using import struct
@@ -198,6 +193,13 @@ execute
     fset ZF (acc == 0)
     fset NF (acc & 0x80)
 
+""""Jump
+instruction JMP
+    0x4C -> absolute
+    0x6C -> indirect
+execute
+    ;
+
 """"Load X Register
 instruction LDX
     0xA2 -> immediate
@@ -209,14 +211,6 @@ execute
     rx = operand
     fset ZF (rx == 0)
     fset NF (rx & 0x80)
-
-""""Store X Register
-instruction STX
-    0x86 -> zero-page
-    0x96 -> zero-pageY
-    0x8E -> absolute
-execute
-    operand = rx
 
 """"Logical Shift Right
 instruction LSR
@@ -230,6 +224,14 @@ execute
     operand >>= 1:u8
     fset ZF (operand == 0:u8)
     fset NF (operand & 0x80:u8)
+
+""""Store X Register
+instruction STX
+    0x86 -> zero-page
+    0x96 -> zero-pageY
+    0x8E -> absolute
+execute
+    operand = rx
 
 do
     let opcode-table
