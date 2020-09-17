@@ -202,32 +202,6 @@ execute
     fset ZF (operand == 0)
     fset NF (operand & 0x80)
 
-# example of a generated opcode function:
-# fn OpCode0x4A (cpu)
-#     # this addressing mode uses the accumulator
-#     let operand = cpu.RA
-#     inline fset (flag v)
-#         'set-flag cpu flag v
-
-#     let acc = cpu.RA
-#     let rx  = cpu.RX
-#     let ry  = cpu.RY
-#     let pc  = cpu.PC
-#     let sp  = cpu.RS
-#     let
-
-#     let NF = StatusFlag.Negative
-#     let OF = StatusFlag.Overflow
-#     let BF = StatusFlag.Break
-#     let DF = StatusFlag.Decimal
-#     let IF = StatusFlag.InterruptDisable
-#     let ZF = StatusFlag.Zero
-#     let CF = StatusFlag.Carry
-#     fset CF (operand & 0x1)
-#     operand >>= 1
-#     fset ZF (operand == 0)
-#     fset ZN (operand & 0x80)
-
 do
     let opcode-table
     locals;
