@@ -106,7 +106,7 @@ sugar instruction (mnemonic opcodes...)
                 [let] sp  = cpu.RS
 
                 [let] NF = StatusFlag.Negative
-                [let] OF = StatusFlag.Overflow
+                [let] VF = StatusFlag.Overflow
                 [let] BF = StatusFlag.Break
                 [let] DF = StatusFlag.Decimal
                 [let] IF = StatusFlag.InterruptDisable
@@ -163,7 +163,7 @@ execute
     temp := (acc as u16) + operand
     fset CF (temp > 0xFF)
     acc = (temp as u8)
-    # fset ZV ???
+    # fset VF ???
     fset ZF (acc == 0)
     fset NF (acc & 0x80)
 
