@@ -9,12 +9,30 @@ using import Array
 
 using import .common
 
+""""The instruction wrapper:
+    Takes the OpCode itself (for debugging purposes), a view of the cpu state so it
+    can mutate it and the next two bytes after the opcode in memory,
+    which can form a full or partial operand depending on the addressing mode.
+inline make-instruction-fpT (T)
+    # void <- _opcode, cpu-state, low, high
+    pointer (function void (pointer T) (viewof (mutable@ CPUState) 2) u8 u8)
+
 struct OpCode plain
     byte     : u8
     mnemonic : string
-    fun      : (pointer (function void CPUState))
+    fun      : (make-instruction-fpT this-type)
    
+fn NYI-instruction (_opcode cpu next-bytes)
+    print "this instruction is illegal or not yet implemented." _opcode.byte
+    ;
+
 global opcode-table : (Array OpCode)
+for i in (range 255)
+    'append opcode-table
+        OpCode
+            byte = (i as u8)
+            mnemonic = "NYI"
+            fun = NYI-instruction
 
 sugar instruction (mnemonic opcodes...)
     let next rest = (decons next-expr)
@@ -48,8 +66,8 @@ sugar instruction (mnemonic opcodes...)
     # build function
     let fun =
         qq
-            fn (cpu)
-                [let]
+            fn (_opcode cpu lo hi)
+                [let] cpu = ([ptrtoref] cpu)
                 [inline] fset (flag v)
                     'set-flag cpu flag v
 
@@ -66,6 +84,7 @@ sugar instruction (mnemonic opcodes...)
                 [let] IF = StatusFlag.InterruptDisable
                 [let] ZF = StatusFlag.Zero
                 [let] CF = StatusFlag.Carry
+                [unlet] cpu lo hi
                 unquote-splice instruction-code
     _ () rest
 
