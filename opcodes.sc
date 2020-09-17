@@ -36,6 +36,9 @@ for i in (range 255)
             mnemonic = "NYI"
             fun = NYI-instruction
 
+inline join16 (lo hi)
+    ((hi as u16) << 8) | lo
+
 define-scope operand-routers
     inline implicit (cpu lo hi)
         ;
@@ -44,7 +47,7 @@ define-scope operand-routers
         cpu.RA
 
     inline immediate (cpu lo hi)
-        ;
+        lo
 
     inline zero-page (cpu lo hi)
         ;
@@ -59,7 +62,7 @@ define-scope operand-routers
         ;
 
     inline absolute (cpu lo hi)
-        lo
+        cpu.iRAM @ (join16 lo hi)
 
     inline absoluteX (cpu lo hi)
         ;
@@ -70,10 +73,10 @@ define-scope operand-routers
     inline indirect (cpu lo hi)
         ;
 
-    inline indexed-indirect (cpu lo hi)
+    inline indirectX (cpu lo hi)
         ;
 
-    inline indirect-indexed (cpu lo hi)
+    inline indirectY (cpu lo hi)
         ;
        
 sugar instruction (mnemonic opcodes...)
@@ -130,7 +133,10 @@ sugar instruction (mnemonic opcodes...)
                     try
                         '@ operand-routers (addressing-mode as Symbol)
                     except (ex)
-                        error "unrecognized addressing mode, see documentation"
+                        error
+                            .. "unrecognized addressing mode `"
+                                (tostring addressing-mode)
+                                "`, see documentation"
                 cons
                     qq
                         [gen-opcode-table-entry] [code] [mnemonic]
