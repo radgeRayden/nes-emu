@@ -4,7 +4,18 @@ import .opcodes
 global cpu : CPUState
 
 fn fmt-hex (i)
-    sc_default_styler 'style-number (.. "0x" (hex i))
+    width := (sizeof i) * 2
+    representation := (hex i)
+    padding := width - (countof representation)
+    let str =
+        if (padding > 0)
+            let buf = (alloca-array i8 padding)
+            for i in (range padding)
+                buf @ i = 48:i8 # "0"
+            .. "0x" (string buf padding) representation
+        else
+            .. "0x" (hex i)
+    sc_default_styler 'style-number str
 
 inline decode (code lo hi)
     local opcode = (opcodes.opcode-table @ code)
@@ -45,6 +56,7 @@ do
 
 do
     cpu = (CPUState)
+    print "Easy 6502"
     local program =
         arrayof u8 0xa9 0x01 0x8d 0x00 0x02 0xa9 0x05 0x8d 0x01 0x02 0xa9 0x08 0x8d 0x02 0x02
 
@@ -59,6 +71,6 @@ do
 
     loop ()
         if (cpu.PC >= (countof program))
-            print "finished"
+            print "finished" (fmt-hex cpu.PC) (fmt-hex cpu.RA)
             break;
         decode (fetch)
