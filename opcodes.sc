@@ -16,7 +16,7 @@ using import .common
     meant to survive past the instruction execution, so it _should_ never become stale. To get
     as much safety as we can in this situation we assert that the mmem has been resized
     so that the full 64Kb are addressable.
-struct MemoryLocation
+struct AbsoluteOperand
     addr    : u16
     mmemptr : (mutable@ u8)
     inline __typecall (cls addr cpu)
@@ -34,6 +34,9 @@ struct MemoryLocation
         static-if (rhsT == u8)
             inline (lhs rhs)
                 deref (lhs.mmemptr @ lhs.addr)
+        elseif (rhsT == MemoryAddress)
+            inline (lhs rhs)
+                lhs.addr as MemoryAddress
 
 """"The instruction wrapper:
     Takes the OpCode itself (for debugging purposes), a view of the cpu state so it
@@ -88,13 +91,13 @@ define-scope operand-routers
         lo as i8
 
     inline absolute (cpu lo hi)
-        MemoryLocation (join16 lo hi) cpu
+        AbsoluteOperand (join16 lo hi) cpu
 
     inline absoluteX (cpu lo hi)
-        MemoryLocation ((join16 lo hi) + cpu.RX) cpu
+        AbsoluteOperand ((join16 lo hi) + cpu.RX) cpu
 
     inline absoluteY (cpu lo hi)
-        MemoryLocation ((join16 lo hi) + cpu.RY) cpu
+        AbsoluteOperand ((join16 lo hi) + cpu.RY) cpu
 
     inline indirect (cpu lo hi)
         ;
@@ -196,9 +199,9 @@ execute
 """"Jump
 instruction JMP
     0x4C -> absolute
-    0x6C -> indirect
+    # 0x6C -> indirect
 execute
-    ;
+    pc = operand
 
 """"Load X Register
 instruction LDX

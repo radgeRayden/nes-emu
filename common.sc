@@ -11,12 +11,14 @@ enum StatusFlag plain
     Zero = 1
     Carry = 0
 
+typedef MemoryAddress <: u16
+
 struct CPUState
     # registers
     RA : u8  # accumulator
     RX : u8
     RY : u8
-    PC : u16 # program counter
+    PC : MemoryAddress # program counter
     RS : u8  # stack pointer
     RP : u8  # status
 
@@ -38,5 +40,5 @@ struct CPUState
         (self.RP & (1:u8 << (flag as u8))) as bool
 
 do
-    let CPUState StatusFlag
+    let CPUState StatusFlag MemoryAddress
     locals;
