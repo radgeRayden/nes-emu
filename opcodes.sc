@@ -40,6 +40,8 @@ inline join16 (lo hi)
     ((hi as u16) << 8) | lo
 
 define-scope operand-routers
+    # opcodes that allow implicit only allow implicit, so we don't have
+    # to do anything special.
     inline implicit (cpu lo hi)
         ;
 
@@ -53,10 +55,10 @@ define-scope operand-routers
         cpu.mmem @ (join16 lo 0x00)
 
     inline zero-pageX (cpu lo hi)
-        ;
+        cpu.mmem @ (join16 (lo + cpu.RX) 0x00)
 
     inline zero-pageY (cpu lo hi)
-        ;
+        cpu.mmem @ (join16 (lo + cpu.RY) 0x00)
 
     inline relative (cpu lo hi)
         ;
@@ -65,10 +67,10 @@ define-scope operand-routers
         cpu.mmem @ (join16 lo hi)
 
     inline absoluteX (cpu lo hi)
-        ;
+        cpu.mmem @ ((join16 lo hi) + cpu.RX)
 
     inline absoluteY (cpu lo hi)
-        ;
+        cpu.mmem @ ((join16 lo hi) + cpu.RY)
 
     inline indirect (cpu lo hi)
         ;
@@ -153,10 +155,10 @@ run-stage;
 instruction ADC
     0x69 -> immediate
     0x65 -> zero-page
-    # 0x75 -> zero-pageX
+    0x75 -> zero-pageX
     0x6D -> absolute
-    # 0x7D -> absoluteX
-    # 0x79 -> absoluteY
+    0x7D -> absoluteX
+    0x79 -> absoluteY
     # 0x61 -> indirectX
     # 0x71 -> indirectY
 execute
@@ -171,7 +173,7 @@ execute
 instruction LDX
     0xA2 -> immediate
     0xA6 -> zero-page
-    # 0xB6 -> zero-pageY
+    0xB6 -> zero-pageY
     0xAE -> absolute
     # 0xBE -> absoluteY
 execute
@@ -182,7 +184,7 @@ execute
 """"Stores the contents of the X register into memory.
 instruction STX
     0x86 -> zero-page
-    # 0x96 -> zero-pageY
+    0x96 -> zero-pageY
     0x8E -> absolute
 execute
     operand = rx
@@ -193,7 +195,7 @@ execute
 instruction LSR
     0x4A -> accumulator
     0x46 -> zero-page
-    # 0x56 -> zero-pageX
+    0x56 -> zero-pageX
     # 0x4E -> absolute
     # 0x5E -> absoluteX
 execute
