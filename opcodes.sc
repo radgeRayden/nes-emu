@@ -75,6 +75,7 @@ struct OpCode plain
     fun      : (make-instruction-fpT this-type)
    
 fn NYI-instruction (_opcode cpu low high)
+    cpu.PC += 1
     print "this instruction is illegal or not yet implemented." _opcode.byte
     ;
 
