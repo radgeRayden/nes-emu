@@ -24,7 +24,7 @@ struct CPUState
 
     inline __typecall (cls)
         local self = (super-type.__typecall cls)
-        'resize self.iRAM 0xFFFF
+        'resize self.mmem 0xFFFF
         move (deref self)
 
     inline... set-flag (self, flag : StatusFlag, v : bool)
