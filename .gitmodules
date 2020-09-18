@@ -1,0 +1,6 @@
+[submodule "cpath"]
+	path = cpath
+	url = https://github.com/BraedonWooding/cpath
+[submodule "nes-test-roms"]
+	path = nes-test-roms
+	url = https://github.com/christopherpow/nes-test-roms
