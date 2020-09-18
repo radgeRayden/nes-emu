@@ -7,4 +7,4 @@ define-scope cpath
             options "-D_CPATH_FUNC_="
     using header.extern filter "^cpath"
 
-sanitize-scope cpath "^cpath"
+sanitize-scope cpath "^cpath[_]?"
