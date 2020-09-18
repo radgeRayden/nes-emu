@@ -19,7 +19,6 @@ fn fmt-hex (i)
 
 inline decode (code lo hi)
     local opcode = (opcodes.opcode-table @ code)
-    print opcode.mnemonic (fmt-hex opcode.byte)
     opcode.fun &opcode &cpu lo hi
 
 # NOTE: these tests are non exhaustive, and meant to test
@@ -74,3 +73,5 @@ do
             print "finished" (fmt-hex cpu.PC) (fmt-hex cpu.RA)
             break;
         decode (fetch)
+    test (cpu.PC == 0xf)
+    test (cpu.RA == 0x8)
