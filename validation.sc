@@ -66,5 +66,41 @@ let romdata =
 global cpu : CPUState
 load-iNES cpu romdata
 cpu.PC = 0xC000
-dump-memory cpu "nestest.dump"
+
+fn fmt-hex (i)
+    width := (sizeof i) * 2
+    representation := (hex i)
+    padding := width - (countof representation)
+    let str =
+        if (padding > 0)
+            let buf = (alloca-array i8 padding)
+            for i in (range padding)
+                buf @ i = 48:i8 # "0"
+            .. "0x" (string buf padding) representation
+        else
+            .. "0x" (hex i)
+    sc_default_styler 'style-number str
+
+inline decode (code lo hi)
+    local opcode = (opcodes.opcode-table @ code)
+    print (fmt-hex cpu.PC) opcode.mnemonic opcode.addrmode (va-map fmt-hex opcode.byte lo hi)
+    opcode.fun &opcode &cpu lo hi
+
+inline fetch ()
+    pc := cpu.PC
+    op := cpu.mmem @ pc
+    let lo =
+        ? ((pc + 1) < (countof cpu.mmem)) (cpu.mmem @ (pc + 1)) 0x00:u8
+    let hi =
+        ? ((pc + 2) < (countof cpu.mmem)) (cpu.mmem @ (pc + 2)) 0x00:u8
+    _ op lo hi
+
+loop ()
+    if (cpu.PC >= (countof cpu.mmem))
+        print "finished" (fmt-hex cpu.PC) (fmt-hex cpu.RA)
+        break;
+    decode (fetch)
+    stdio.getchar;
+    ;
+
 none
