@@ -4,6 +4,7 @@ using import Option
 
 using import .cpu
 import .opcodes
+using import .helpers
 
 fn dump-memory (cpu path)
     using stdio
@@ -11,24 +12,6 @@ fn dump-memory (cpu path)
     if (fhandle == null)
     fwrite cpu.mmem 1 (countof cpu.mmem) fhandle
     fclose fhandle
-
-fn read-whole-file (path)
-    using stdio
-
-    fhandle := (fopen path "rb")
-    if (fhandle == null)
-        raise false
-    else
-        local buf : (Array u8)
-        fseek fhandle 0 SEEK_END
-        flen := (ftell fhandle) as u64
-        fseek fhandle 0 SEEK_SET
-
-        'resize buf flen
-
-        fread buf flen 1 fhandle
-        fclose fhandle
-        buf
 
 fn load-iNES (cpu rom)
     inline readstring (position size)
