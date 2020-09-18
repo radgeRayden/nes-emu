@@ -88,7 +88,7 @@ for i in (range 256)
             addrmode = AddressingMode.Implicit
             fun = NYI-instruction
 
-inline join16 (lo hi)
+inline joinLE (lo hi)
     ((hi as u16) << 8) | lo
 
 define-scope operand-routers
@@ -104,42 +104,42 @@ define-scope operand-routers
         lo
 
     inline zero-page (cpu lo hi)
-        cpu.mmem @ (join16 lo 0x00)
+        cpu.mmem @ (joinLE lo 0x00)
 
     inline zero-pageX (cpu lo hi)
-        cpu.mmem @ (join16 (lo + cpu.RX) 0x00)
+        cpu.mmem @ (joinLE (lo + cpu.RX) 0x00)
 
     inline zero-pageY (cpu lo hi)
-        cpu.mmem @ (join16 (lo + cpu.RY) 0x00)
+        cpu.mmem @ (joinLE (lo + cpu.RY) 0x00)
 
     inline relative (cpu lo hi)
         lo as i8
 
     inline absolute (cpu lo hi)
-        AbsoluteOperand (join16 lo hi) cpu
+        AbsoluteOperand (joinLE lo hi) cpu
 
     inline absoluteX (cpu lo hi)
-        AbsoluteOperand ((join16 lo hi) + cpu.RX) cpu
+        AbsoluteOperand ((joinLE lo hi) + cpu.RX) cpu
 
     inline absoluteY (cpu lo hi)
-        AbsoluteOperand ((join16 lo hi) + cpu.RY) cpu
+        AbsoluteOperand ((joinLE lo hi) + cpu.RY) cpu
 
     inline indirect (cpu lo hi)
         # fetch 2 bytes at the indirect address provided
-        iaddr := (join16 lo hi)
+        iaddr := (joinLE lo hi)
         let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
         # return the location stored at this address
-        MemoryAddress (join16 rl rh)
+        MemoryAddress (joinLE rl rh)
 
     inline indirectX (cpu lo hi)
-        iaddr := (join16 (lo + cpu.RX) 0x00)
+        iaddr := (joinLE (lo + cpu.RX) 0x00)
         let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
-        AbsoluteOperand (join16 rl rh) cpu
+        AbsoluteOperand (joinLE rl rh) cpu
 
     inline indirectY (cpu lo hi)
-        iaddr := (join16 lo 0x00)
+        iaddr := (joinLE lo 0x00)
         let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
-        AbsoluteOperand ((join16 rl rh) + cpu.RY) cpu
+        AbsoluteOperand ((joinLE rl rh) + cpu.RY) cpu
       
 sugar instruction (mnemonic opcodes...)
     let mnemonic = (mnemonic as Symbol as string)
