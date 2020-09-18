@@ -41,6 +41,23 @@ struct CPUState
     inline flag-set? (self flag)
         (self.RP & (1:u8 << (flag as u8))) as bool
 
+    fn push-stack (self v)
+        let vT = (typeof v)
+        sp := self.RS
+        static-if (imply? vT u16)
+            let lo hi = (separateLE v)
+            sp -= 2
+            let idx = (joinLE sp 0x01)
+            self.mmem @ idx = lo
+            self.mmem @ (idx + 1) = hi
+            ;
+        else
+            sp -= 1
+            let idx = (joinLE sp 0x01)
+            self.mmem @ idx = (imply v u8)
+            ;
+
+
 do
     let CPUState StatusFlag MemoryAddress
     locals;

@@ -206,6 +206,7 @@ sugar instruction (mnemonic opcodes...)
                         helper cpu ...
 
                 [let] fset = (wrap-helper [CPUState.set-flag])
+                [let] push-stack = (wrap-helper [CPUState.push-stack])
 
                 [let] acc = cpu.RA
                 [let] rx  = cpu.RX
@@ -276,6 +277,13 @@ fn init-instructions ()
         0x4C -> absolute
         0x6C -> indirect
     execute
+        pc = operand
+
+    """"Jump to Subroutine
+    instruction JSR
+        0x20 -> absolute
+    execute
+        push-stack (pc - 1)
         pc = operand
 
     """"Load Accumulator

@@ -136,6 +136,7 @@ loop ()
         print "finished" (fmt-hex state.PC) (fmt-hex state.RA)
         break;
     print-cpu-state;
+    dump-memory state "nestest.dump"
     decode (fetch)
     stdio.getchar;
     ;
