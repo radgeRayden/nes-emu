@@ -4,7 +4,7 @@ using import struct
 using import enum
 using import Array
 
-using import .common
+using import .cpu
 
 """"This type is used in `absolute` addressing modes to represent
     a 16-bit wide operand that can be both a literal u16 memory location,

@@ -2,7 +2,7 @@ using import radlib.libc
 using import Array
 using import Option
 
-using import .common
+using import .cpu
 import .opcodes
 
 fn dump-memory (cpu path)
@@ -63,11 +63,11 @@ let romdata =
         print "was unable to open ROM file"
         exit 1
 
-global cpu : CPUState
-load-iNES cpu romdata
-cpu.RS = 0xFD
-cpu.PC = 0xC000
-cpu.RP = 0x24
+global state : CPUState
+load-iNES state romdata
+state.RS = 0xFD
+state.PC = 0xC000
+state.RP = 0x24
 
 fn fmt-hex (i)
     width := (sizeof i) * 2
@@ -98,19 +98,19 @@ fn format-operand (addrmode lo hi)
         ""
 
 inline fetch ()
-    pc := cpu.PC
-    op := cpu.mmem @ pc
+    pc := state.PC
+    op := state.mmem @ pc
     let lo =
-        ? ((pc + 1) < (countof cpu.mmem)) (cpu.mmem @ (pc + 1)) 0x00:u8
+        ? ((pc + 1) < (countof state.mmem)) (state.mmem @ (pc + 1)) 0x00:u8
     let hi =
-        ? ((pc + 2) < (countof cpu.mmem)) (cpu.mmem @ (pc + 2)) 0x00:u8
+        ? ((pc + 2) < (countof state.mmem)) (state.mmem @ (pc + 2)) 0x00:u8
     _ op lo hi
 
 fn print-cpu-state ()
     let op lo hi = (fetch)
     local opcode = (opcodes.opcode-table @ op)
     print
-        fmt-hex cpu.PC
+        fmt-hex state.PC
         "\t"
         fmt-hex opcode.byte
         fmt-hex lo
@@ -119,21 +119,21 @@ fn print-cpu-state ()
         format-operand opcode.addrmode lo hi
         opcode.addrmode
         "\t\t"
-        .. "A:" (fmt-hex cpu.RA)
-        .. "X:" (fmt-hex cpu.RX)
-        .. "Y:" (fmt-hex cpu.RY)
-        .. "P:" (fmt-hex cpu.RP)
-        .. "SP:" (fmt-hex cpu.RS)
+        .. "A:" (fmt-hex state.RA)
+        .. "X:" (fmt-hex state.RX)
+        .. "Y:" (fmt-hex state.RY)
+        .. "P:" (fmt-hex state.RP)
+        .. "SP:" (fmt-hex state.RS)
     # print (fmt-hex cpu.PC) opcode.mnemonic opcode.addrmode (va-map fmt-hex opcode.byte lo hi)
 
 inline decode (code lo hi)
     local opcode = (opcodes.opcode-table @ code)
-    opcode.fun &opcode &cpu lo hi
+    opcode.fun &opcode &state lo hi
     ;
 
 loop ()
-    if (cpu.PC >= (countof cpu.mmem))
-        print "finished" (fmt-hex cpu.PC) (fmt-hex cpu.RA)
+    if (state.PC >= (countof state.mmem))
+        print "finished" (fmt-hex state.PC) (fmt-hex state.RA)
         break;
     print-cpu-state;
     decode (fetch)
