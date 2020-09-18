@@ -201,8 +201,13 @@ sugar instruction (mnemonic opcodes...)
             fn (_opcode cpu lo hi)
                 [let] cpu = ([ptrtoref] cpu)
                 cpu.PC += [instruction-length]
-                [inline] fset (flag v)
-                    'set-flag cpu flag v
+
+                # there's probably a way neater way to do this!
+                [inline] wrap-helper (helper)
+                    [inline] (...)
+                        helper cpu ...
+
+                [let] fset = (wrap-helper [CPUState.set-flag])
 
                 [let] acc = cpu.RA
                 [let] rx  = cpu.RX
@@ -219,7 +224,7 @@ sugar instruction (mnemonic opcodes...)
                 [let] CF = StatusFlag.Carry
 
                 [let] operand = ([router] cpu lo hi)
-                [unlet] cpu lo hi
+                [unlet] cpu lo hi wrap-helper
 
                 unquote-splice instruction-code
 
