@@ -31,12 +31,12 @@ struct AbsoluteOperand
                 lhs.mmemptr @ lhs.addr = (rhs as u8)
 
     inline __imply (lhsT rhsT)
-        static-if (imply? u8 rhsT)
-            inline (self)
-                imply (self.mmemptr @ self.addr) rhsT
-        elseif (rhsT == MemoryAddress)
+        static-if (rhsT == MemoryAddress)
             inline (self)
                 self.addr as MemoryAddress
+        elseif (imply? u8 rhsT)
+            inline (self)
+                imply (self.mmemptr @ self.addr) rhsT
 
 """"The instruction wrapper:
     Takes the OpCode itself (for debugging purposes), a view of the cpu state so it
