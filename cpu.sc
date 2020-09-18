@@ -2,6 +2,8 @@ using import struct
 using import enum
 using import Array
 
+using import .helpers
+
 enum StatusFlag plain
     Negative = 7
     Overflow = 6

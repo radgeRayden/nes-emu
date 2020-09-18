@@ -5,6 +5,7 @@ using import enum
 using import Array
 
 using import .cpu
+using import .helpers
 
 """"This type is used in `absolute` addressing modes to represent
     a 16-bit wide operand that can be both a literal u16 memory location,
@@ -76,7 +77,7 @@ struct OpCode plain
    
 fn NYI-instruction (_opcode cpu low high)
     cpu.PC += 1
-    print "this instruction is illegal or not yet implemented." _opcode.byte
+    print "this instruction is illegal or not yet implemented." (hex _opcode.byte)
     ;
 
 global opcode-table : (Array OpCode)
@@ -87,9 +88,6 @@ for i in (range 256)
             mnemonic = "NYI"
             addrmode = AddressingMode.Implicit
             fun = NYI-instruction
-
-inline joinLE (lo hi)
-    ((hi as u16) << 8) | lo
 
 define-scope operand-routers
     # opcodes that allow implicit only allow implicit, so we don't have
@@ -140,7 +138,7 @@ define-scope operand-routers
         iaddr := (joinLE lo 0x00)
         let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
         AbsoluteOperand ((joinLE rl rh) + cpu.RY) cpu
-      
+
 sugar instruction (mnemonic opcodes...)
     let mnemonic = (mnemonic as Symbol as string)
     let next rest = (decons next-expr)
