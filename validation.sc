@@ -65,7 +65,9 @@ let romdata =
 
 global cpu : CPUState
 load-iNES cpu romdata
+cpu.RS = 0xFD
 cpu.PC = 0xC000
+cpu.RP = 0x24
 
 fn fmt-hex (i)
     width := (sizeof i) * 2
@@ -81,10 +83,19 @@ fn fmt-hex (i)
             .. "0x" (hex i)
     sc_default_styler 'style-number str
 
-inline decode (code lo hi)
-    local opcode = (opcodes.opcode-table @ code)
-    print (fmt-hex cpu.PC) opcode.mnemonic opcode.addrmode (va-map fmt-hex opcode.byte lo hi)
-    opcode.fun &opcode &cpu lo hi
+fn format-operand (addrmode lo hi)
+    using opcodes
+
+    inline joinLE (lo hi)
+        ((hi as u16) << 8) | lo
+
+    switch addrmode
+    case AddressingMode.Immediate
+        .. "#$" (hex lo)
+    case AddressingMode.Absolute
+        .. "$" (hex (joinLE lo hi))
+    default
+        ""
 
 inline fetch ()
     pc := cpu.PC
@@ -95,10 +106,36 @@ inline fetch ()
         ? ((pc + 2) < (countof cpu.mmem)) (cpu.mmem @ (pc + 2)) 0x00:u8
     _ op lo hi
 
+fn print-cpu-state ()
+    let op lo hi = (fetch)
+    local opcode = (opcodes.opcode-table @ op)
+    print
+        fmt-hex cpu.PC
+        "\t"
+        fmt-hex opcode.byte
+        fmt-hex lo
+        fmt-hex hi
+        opcode.mnemonic
+        format-operand opcode.addrmode lo hi
+        opcode.addrmode
+        "\t\t"
+        .. "A:" (fmt-hex cpu.RA)
+        .. "X:" (fmt-hex cpu.RX)
+        .. "Y:" (fmt-hex cpu.RY)
+        .. "P:" (fmt-hex cpu.RP)
+        .. "SP:" (fmt-hex cpu.RS)
+    # print (fmt-hex cpu.PC) opcode.mnemonic opcode.addrmode (va-map fmt-hex opcode.byte lo hi)
+
+inline decode (code lo hi)
+    local opcode = (opcodes.opcode-table @ code)
+    opcode.fun &opcode &cpu lo hi
+    ;
+
 loop ()
     if (cpu.PC >= (countof cpu.mmem))
         print "finished" (fmt-hex cpu.PC) (fmt-hex cpu.RA)
         break;
+    print-cpu-state;
     decode (fetch)
     stdio.getchar;
     ;

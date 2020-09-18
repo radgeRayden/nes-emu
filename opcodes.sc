@@ -338,5 +338,5 @@ fn init-instructions ()
 init-instructions;
 
 do
-    let opcode-table init-instructions
+    let opcode-table init-instructions AddressingMode
     locals;
