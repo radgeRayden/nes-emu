@@ -222,6 +222,7 @@ sugar instruction (mnemonic opcodes...)
                 [let] ry  = cpu.RY
                 [let] pc  = cpu.PC
                 [let] sp  = cpu.RS
+                [let] rp  = cpu.RP
 
                 [let] NF = StatusFlag.Negative
                 [let] VF = StatusFlag.Overflow
@@ -278,6 +279,21 @@ fn init-instructions ()
         fset CF (temp > 0xFF)
         acc = (temp as u8)
         # fset VF ???
+        fset ZF (acc == 0)
+        fset NF (acc & 0x80)
+
+    """"Logical AND
+    instruction AND
+        0x29 -> immediate
+        0x25 -> zero-page
+        0x35 -> zero-pageX
+        0x2D -> absolute
+        0x3D -> absoluteX
+        0x39 -> absoluteY
+        0x21 -> indirectX
+        0x31 -> indirectY
+    execute
+        acc &= operand
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
 
@@ -404,6 +420,22 @@ fn init-instructions ()
     execute
         ;
 
+    """"Push Processor Status
+    instruction PHP
+        0x08 -> implicit
+    execute
+        # http://wiki.nesdev.com/w/index.php/Status_flags
+        # See "The B Flag"
+        push-stack (rp | 0x30)
+
+    """"Pull Accumulator
+    instruction PLA
+        0x68 -> implicit
+    execute
+        acc = (pull-stack 1)
+        fset ZF (acc == 0)
+        fset NF (acc & 0x80)
+
     """"Return from Subroutine
     instruction RTS
         0x60 -> implicit
@@ -415,6 +447,18 @@ fn init-instructions ()
         0x38 -> implicit
     execute
         fset CF true
+
+    """"Set Decimal Flag
+    instruction SED
+        0xF8 -> implicit
+    execute
+        fset DF true
+
+    """"Set Interrupt Disable
+    instruction SEI
+        0x78 -> implicit
+    execute
+        fset IF true
 
     """"Store Accumulator
     instruction STA
