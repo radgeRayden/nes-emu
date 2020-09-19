@@ -188,7 +188,7 @@ for i entry in (enumerate log-snapshots)
     print current
     test (entry == current)
         f""""
-             entry ${i} didn't match CPU state, log says:
+             entry ${i + 1} didn't match CPU state, log says:
              ${entry}
     'next state opcodes.opcode-table
     ;
