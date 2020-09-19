@@ -327,6 +327,13 @@ fn init-instructions ()
         fset NF (operand & 0x80) # 7
         fset VF (operand & 0x40) # 6
 
+    """"Branch if Minus
+    instruction BMI
+        0x30 -> relative
+    execute
+        if (fset? NF)
+            pc += operand
+
     """"Branch if Not Equal
     instruction BNE
         0xD0 -> relative
@@ -359,6 +366,50 @@ fn init-instructions ()
         0x18 -> implicit
     execute
         fset CF false
+
+    """"Clear Decimal Mode
+    instruction CLD
+        0xD8 -> implicit
+    execute
+        fset DF false
+
+    """"Clear Overflow Flag
+    instruction CLV
+        0xB8 -> implicit
+    execute
+        fset VF false
+
+    """"Compare
+    instruction CMP
+        0xC9 -> immediate
+        0xC5 -> zero-page
+        0xD5 -> zero-pageX
+        0xCD -> absolute
+        0xDD -> absoluteX
+        0xD9 -> absoluteY
+        0xC1 -> indirectX
+        0xD1 -> indirectY
+    execute
+        if (acc >= operand)
+            fset CF true
+        if (acc == operand)
+            fset ZF true
+        fset NF ((acc - operand) & 0x80)
+    
+    """"Exclusive OR
+    instruction EOR
+        0x49 -> immediate
+        0x45 -> zero-page
+        0x55 -> zero-pageX
+        0x4D -> absolute
+        0x5D -> absoluteX
+        0x59 -> absoluteY
+        0x41 -> indirectX
+        0x51 -> indirectY
+    execute
+        acc ^= operand
+        fset ZF (acc == 0)
+        fset NF (acc & 0x80)
 
     """"Jump
     instruction JMP
@@ -420,6 +471,27 @@ fn init-instructions ()
     execute
         ;
 
+    """"Logical Inclusive OR
+    instruction ORA
+        0x09 -> immediate
+        0x05 -> zero-page
+        0x15 -> zero-pageX
+        0x0D -> absolute
+        0x1D -> absoluteX
+        0x19 -> absoluteY
+        0x01 -> indirectX
+        0x11 -> indirectY
+    execute
+        acc |= operand
+        fset CF (acc == 0)
+        fset NF (acc & 0x80)
+
+    """"Push Accumulator
+    instruction PHA
+        0x48 -> implicit
+    execute
+        push-stack acc
+
     """"Push Processor Status
     instruction PHP
         0x08 -> implicit
@@ -435,6 +507,16 @@ fn init-instructions ()
         acc = (pull-stack 1)
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
+
+    """"Pull Processor Status
+    instruction PLP
+        0x28 -> implicit
+    execute
+        # bits 4 and 5 have to remain the same
+        mask := (rp & 0x30:u8)
+        svalue := (pull-stack 1)
+        rp = ((svalue & (~ 0x30:u8)) | mask)
+        ;
 
     """"Return from Subroutine
     instruction RTS
