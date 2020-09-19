@@ -391,10 +391,8 @@ fn init-instructions ()
         0xC1 -> indirectX
         0xD1 -> indirectY
     execute
-        if (acc >= operand)
-            fset CF true
-        if (acc == operand)
-            fset ZF true
+        fset CF (acc >= operand)
+        fset ZF (acc == operand)
         fset NF ((acc - operand) & 0x80)
     
     """"Exclusive OR
