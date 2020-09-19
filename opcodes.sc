@@ -21,7 +21,7 @@ struct AbsoluteOperand
     addr    : u16
     mmemptr : (mutable@ u8)
     inline __typecall (cls addr cpu)
-        assert ((countof cpu.mmem) == 0xFFFF)
+        assert ((countof cpu.mmem) == CPUState.AddressableMemorySize)
         super-type.__typecall cls
             addr = addr
             mmemptr = cpu.mmem._items

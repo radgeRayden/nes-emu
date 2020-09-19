@@ -24,11 +24,12 @@ struct CPUState
     RS : u8  # stack pointer
     RP : u8  # status
 
-    mmem : (Array u8 0xFFFF)
+    let AddressableMemorySize = (0xFFFF + 1)
+    mmem : (Array u8 AddressableMemorySize)
 
     inline __typecall (cls)
         local self = (super-type.__typecall cls)
-        'resize self.mmem 0xFFFF
+        'resize self.mmem ('capacity self.mmem)
         # set power up state
         self.RS = 0xFD
         # FIXME: this is very likely incorrect, I

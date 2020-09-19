@@ -81,7 +81,7 @@ fn format-operand (addrmode lo hi)
 #         .. "SP:" (fmt-hex state.RS)
 
 loop ()
-    if (state.PC >= (countof state.mmem))
+    if (state.PC >= (CPUState.AddressableMemorySize - 1))
         print "finished" (fmt-hex state.PC) (fmt-hex state.RA)
         break;
     'next state opcodes.opcode-table
