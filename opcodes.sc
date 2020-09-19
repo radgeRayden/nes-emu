@@ -574,12 +574,16 @@ fn init-instructions ()
         0xE1 -> indirectX
         0xF1 -> indirectY
     execute
-        carry  := (? (fset? CF) 1:u8 0:u8)
-        result := acc - operand - (1:u8 - carry)
-        overflow? := (((acc ^ result) & (operand ^ result)) & 0x80)
-        fset VF overflow?
-        fset CF (not overflow?)
-        acc = result
+        carry := (? (fset? CF) 1:u8 0:u8)
+        twos  := (~ (imply operand u8)) + 1:u8
+        old   := (deref acc)
+        oldp? := old < 128
+        report carry acc operand twos
+
+        acc += twos + (carry - 1:u8)
+        fset VF
+            ? oldp? ((acc > old) and (acc < 128)) (acc < 128)
+        fset CF (acc < old)
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
 
