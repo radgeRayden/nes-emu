@@ -1,11 +1,79 @@
 using import radlib.libc
 using import Array
 using import Option
+using import struct
 
 using import .cpu
 import .opcodes
 using import .helpers
 
+struct RegisterSnapshot
+    PC : u16
+    A  : u8
+    X  : u8
+    Y  : u8
+    P  : u8
+    SP : u8
+
+    opcode : u8
+    mnemonic : rawstring
+    operand-low  : (Option u8)
+    operand-high : (Option u8)
+
+    inline __== (lhsT rhsT)
+        dump lhsT rhsT
+
+fn parse-log (path)
+    using stdio
+    using _string
+    let fhandle = (fopen path "r")
+
+    fseek fhandle 0 SEEK_END
+    let flen = (ftell fhandle)
+    fseek fhandle 0 SEEK_SET
+
+    local logged-state : (Array RegisterSnapshot)
+    loop ()
+        local line : (array i8 128)
+        let ptr = (fgets &line (sizeof line) fhandle)
+        if (ptr == null)
+            break;
+
+        local snap : RegisterSnapshot
+        assert ((sscanf &line "%hx" &snap.PC) == 1)
+
+        local lo : u8
+        local hi : u8
+        # we'll be skipping to specific line offsets since the log table has a fixed
+        # width for columns.
+        let ins-byte-count =
+            sscanf (reftoptr (line @ 6)) "%hhx %hhx %hhx" &snap.opcode &lo &hi
+        assert ins-byte-count
+        match ins-byte-count
+        case 1
+            ;
+        case 2
+            snap.operand-low = lo
+        default
+            snap.operand-low = lo
+            snap.operand-high = hi
+
+        assert (sscanf (reftoptr (line @ 16)) "%s" &snap.mnemonic)
+
+        let ins-byte-count =
+            sscanf (reftoptr (line @ 48)) "A:%hhx X:%hhx Y:%hhx P:%hhx SP:%hhx"
+                &snap.A
+                &snap.X
+                &snap.Y
+                &snap.P
+                &snap.SP
+        assert (ins-byte-count == 5)
+
+        'append logged-state snap
+        ;
+
+    fclose fhandle
+    deref logged-state
 fn dump-memory (cpu path)
     using stdio
     let fhandle = (fopen path "wb")
