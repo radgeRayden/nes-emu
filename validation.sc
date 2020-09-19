@@ -10,6 +10,7 @@ fn dump-memory (cpu path)
     using stdio
     let fhandle = (fopen path "wb")
     if (fhandle == null)
+        error "could not open file for writing"
     fwrite cpu.mmem 1 (countof cpu.mmem) fhandle
     fclose fhandle
 
@@ -49,25 +50,8 @@ let romdata =
 global state : CPUState
 load-iNES state romdata
 
-fn fmt-hex (i)
-    width := (sizeof i) * 2
-    representation := (hex i)
-    padding := width - (countof representation)
-    let str =
-        if (padding > 0)
-            let buf = (alloca-array i8 padding)
-            for i in (range padding)
-                buf @ i = 48:i8 # "0"
-            .. "0x" (string buf padding) representation
-        else
-            .. "0x" (hex i)
-    sc_default_styler 'style-number str
-
 fn format-operand (addrmode lo hi)
     using opcodes
-
-    inline joinLE (lo hi)
-        ((hi as u16) << 8) | lo
 
     switch addrmode
     case AddressingMode.Immediate
@@ -77,39 +61,30 @@ fn format-operand (addrmode lo hi)
     default
         ""
 
-fn print-cpu-state ()
-    let op lo hi = (fetch)
-    local opcode = (opcodes.opcode-table @ op)
-    print
-        fmt-hex state.PC
-        "\t"
-        fmt-hex opcode.byte
-        fmt-hex lo
-        fmt-hex hi
-        opcode.mnemonic
-        format-operand opcode.addrmode lo hi
-        opcode.addrmode
-        "\t\t"
-        .. "A:" (fmt-hex state.RA)
-        .. "X:" (fmt-hex state.RX)
-        .. "Y:" (fmt-hex state.RY)
-        .. "P:" (fmt-hex state.RP)
-        .. "SP:" (fmt-hex state.RS)
-    # print (fmt-hex cpu.PC) opcode.mnemonic opcode.addrmode (va-map fmt-hex opcode.byte lo hi)
-
-inline decode (code lo hi)
-    local opcode = (opcodes.opcode-table @ code)
-    opcode.fun &opcode &state lo hi
-    ;
+# fn print-cpu-state ()
+#     let op lo hi = (fetch)
+#     local opcode = (opcodes.opcode-table @ op)
+#     print
+#         fmt-hex state.PC
+#         "\t"
+#         fmt-hex opcode.byte
+#         fmt-hex lo
+#         fmt-hex hi
+#         opcode.mnemonic
+#         format-operand opcode.addrmode lo hi
+#         opcode.addrmode
+#         "\t\t"
+#         .. "A:" (fmt-hex state.RA)
+#         .. "X:" (fmt-hex state.RX)
+#         .. "Y:" (fmt-hex state.RY)
+#         .. "P:" (fmt-hex state.RP)
+#         .. "SP:" (fmt-hex state.RS)
 
 loop ()
     if (state.PC >= (countof state.mmem))
         print "finished" (fmt-hex state.PC) (fmt-hex state.RA)
         break;
-    print-cpu-state;
-    dump-memory state "nestest.dump"
     'next state opcodes.opcode-table
-    stdio.getchar;
     ;
 
 none

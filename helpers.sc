@@ -1,5 +1,19 @@
 using import Array
 
+fn fmt-hex (i)
+    width := (sizeof i) * 2
+    representation := (hex i)
+    padding := width - (countof representation)
+    let str =
+        if (padding > 0)
+            let buf = (alloca-array i8 padding)
+            for i in (range padding)
+                buf @ i = 48:i8 # "0"
+            .. "0x" (string buf padding) representation
+        else
+            .. "0x" (hex i)
+    sc_default_styler 'style-number str
+
 fn read-whole-file (path)
     import radlib.libc
     using radlib.libc.stdio
@@ -26,5 +40,5 @@ inline separateLE (v16)
     _ (v16 as u8) ((v16 >> 8) as u8)
 
 do
-    let read-whole-file joinLE separateLE
+    let fmt-hex read-whole-file joinLE separateLE
     locals;
