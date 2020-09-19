@@ -186,7 +186,9 @@ for i entry in (enumerate log-snapshots)
     using import testing
     let current = (take-register-snapshot state)
     print current
-    test (entry == current)
+    equal? := entry == current
+    if (not equal?) (dump-memory state "nestest.dump")
+    test equal?
         f""""
              entry ${i + 1} didn't match CPU state, log says:
              ${entry}

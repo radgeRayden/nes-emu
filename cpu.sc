@@ -64,6 +64,19 @@ struct CPUState
             self.mmem @ idx = (imply v u8)
             ;
 
+    inline pull-stack (self n)
+        sp := self.RS
+        let idx = (joinLE sp 0x01)
+        static-match n
+        case 1
+            sp += 1
+            self.mmem @ idx
+        case 2
+            sp += 2
+            joinLE (self.mmem @ idx) (self.mmem @ (idx + 1))
+        default
+            static-error "must always pull one or two bytes from the stack"
+
     fn next (self optable)
         pc := self.PC
         # NOTE: we don't do range checking here because pc is

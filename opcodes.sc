@@ -212,8 +212,10 @@ sugar instruction (mnemonic opcodes...)
                     [inline] (...)
                         helper cpu ...
 
+                [let] fset? = (wrap-helper [CPUState.flag-set?])
                 [let] fset = (wrap-helper [CPUState.set-flag])
                 [let] push-stack = (wrap-helper [CPUState.push-stack])
+                [let] pull-stack = (wrap-helper [CPUState.pull-stack])
 
                 [let] acc = cpu.RA
                 [let] rx  = cpu.RX
@@ -279,6 +281,69 @@ fn init-instructions ()
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
 
+    """"Branch if Carry Clear
+    instruction BCC
+        0x90 -> relative
+    execute
+        if (not (fset? CF))
+            pc += operand
+
+    """"Branch if Carry Set
+    instruction BCS
+        0xB0 -> relative
+    execute
+        if (fset? CF)
+            pc += operand
+
+    """"Branch if Equal
+    instruction BEQ
+        0xF0 -> relative
+    execute
+        if (fset? ZF)
+            pc += operand
+
+    """"Bit Test
+    instruction BIT
+        0x24 -> zero-page
+        0x2C -> absolute
+    execute
+        fset ZF (not (acc & operand))
+        fset NF (operand & 0x80) # 7
+        fset VF (operand & 0x40) # 6
+
+    """"Branch if Not Equal
+    instruction BNE
+        0xD0 -> relative
+    execute
+        if (not (fset? ZF))
+            pc += operand
+    """"Branch if Positive
+    instruction BPL
+        0x10 -> relative
+    execute
+        if (not (fset? NF))
+            pc += operand
+
+    """"Branch if Overflow Clear
+    instruction BVC
+        0x50 -> relative
+    execute
+        if (not (fset? VF))
+            pc += operand
+
+    """"Branch if Overflow Set
+    instruction BVS
+        0x70 -> relative
+    execute
+        if (fset? VF)
+            pc += operand
+
+    """"Clear Carry Flag
+    instruction CLC
+        0x18 -> implicit
+    execute
+        fset CF false
+
     """"Jump
     instruction JMP
         0x4C -> absolute
@@ -332,6 +397,24 @@ fn init-instructions ()
         operand >>= 1
         fset ZF (operand == 0)
         fset NF (operand & 0x80)
+
+    """"No Operation
+    instruction NOP
+        0xEA -> implicit
+    execute
+        ;
+
+    """"Return from Subroutine
+    instruction RTS
+        0x60 -> implicit
+    execute
+        pc = ((pull-stack 2) + 1)
+
+    """"Set Carry Flag
+    instruction SEC
+        0x38 -> implicit
+    execute
+        fset CF true
 
     """"Store Accumulator
     instruction STA
