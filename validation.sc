@@ -71,8 +71,11 @@ fn parse-log (path)
         local hi : u8
         # we'll be skipping to specific line offsets since the log table has a fixed
         # width for columns.
+        # NOTE: Here I use an intermediary string to avoid reading an hex value from the
+        # mnemonic.
+        let istring = (string (reftoptr (line @ 6)) 9)
         let ins-byte-count =
-            sscanf (reftoptr (line @ 6)) "%hhx %hhx %hhx" &snap.opcode &lo &hi
+            sscanf istring "%hhx %hhx %hhx" &snap.opcode &lo &hi
         assert ins-byte-count
         match ins-byte-count
         case 1
