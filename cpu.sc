@@ -29,7 +29,13 @@ struct CPUState
     inline __typecall (cls)
         local self = (super-type.__typecall cls)
         'resize self.mmem 0xFFFF
-        move (deref self)
+        # set power up state
+        self.RS = 0xFD
+        # FIXME: this is very likely incorrect, I
+        # just set it to point to start of PRG ROM.
+        self.PC = 0x8000
+        self.RP = 0x24
+        deref self
 
     inline... set-flag (self, flag : StatusFlag, v : bool)
         let flag-bit = (flag as u8)
@@ -59,6 +65,9 @@ struct CPUState
 
     fn next (self optable)
         pc := self.PC
+        # NOTE: we don't do range checking here because pc is
+        # only 16-bits wide, which gets us the desired behaviour of
+        # wrapping back to 0 if it's incremented too much.
         op := self.mmem @ pc
         lo := self.mmem @ (pc + 1)
         hi := self.mmem @ (pc + 2)

@@ -48,9 +48,6 @@ let romdata =
 
 global state : CPUState
 load-iNES state romdata
-state.RS = 0xFD
-state.PC = 0xC000
-state.RP = 0x24
 
 fn fmt-hex (i)
     width := (sizeof i) * 2
@@ -79,15 +76,6 @@ fn format-operand (addrmode lo hi)
         .. "$" (hex (joinLE lo hi))
     default
         ""
-
-inline fetch ()
-    pc := state.PC
-    op := state.mmem @ pc
-    let lo =
-        ? ((pc + 1) < (countof state.mmem)) (state.mmem @ (pc + 1)) 0x00:u8
-    let hi =
-        ? ((pc + 2) < (countof state.mmem)) (state.mmem @ (pc + 2)) 0x00:u8
-    _ op lo hi
 
 fn print-cpu-state ()
     let op lo hi = (fetch)
