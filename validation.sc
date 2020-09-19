@@ -42,10 +42,20 @@ struct RegisterSnapshot
             else
                 "  "
         s := self
-        let A X Y P SP = (va-map fmt-hex s.A s.X s.Y s.P s.SP)
+        let PC A X Y P SP = (va-map fmt-hex s.PC s.A s.X s.Y s.P s.SP)
         let op = (fmt-hex s.opcode false)
         local mnemonic = s.mnemonic
-        f"${fmt-hex s.PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}"
+        let flags =
+            fold (result = "") for i c in (enumerate "NV54DIZC")
+                local c = c
+                let str = (string &c 1)
+                bit-set? := (s.P & (1 << (7 - i))) as bool
+                .. result
+                    ? bit-set?
+                        sc_default_styler 'style-string str
+                        sc_default_styler 'style-comment str
+
+        f"${PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}  ${flags}"
 
 fn parse-log (path)
     using stdio
