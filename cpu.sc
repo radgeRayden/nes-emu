@@ -51,7 +51,7 @@ struct CPUState
     fn push-stack (self v)
         let vT = (typeof v)
         sp := self.RS
-        static-if (imply? vT u16)
+        static-if ((storageof vT) == u16)
             let lo hi = (separateLE v)
             sp -= 2
             let idx = (joinLE sp 0x01)
