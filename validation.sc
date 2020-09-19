@@ -120,7 +120,7 @@ loop ()
         break;
     print-cpu-state;
     dump-memory state "nestest.dump"
-    decode (fetch)
+    'next state opcodes.opcode-table
     stdio.getchar;
     ;
 

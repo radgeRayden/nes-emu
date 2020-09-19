@@ -40,7 +40,7 @@ struct AbsoluteOperand
                 imply (self.mmemptr @ self.addr) rhsT
 
 """"The instruction wrapper:
-    Takes the OpCode itself (for debugging purposes), a view of the cpu state so it
+    Takes the Instruction itself (for debugging purposes), a view of the cpu state so it
     can mutate it and the next two bytes after the opcode in memory,
     which can form a full or partial operand depending on the addressing mode.
 inline make-instruction-fpT (T)
@@ -69,21 +69,24 @@ enum AddressingMode plain
         else
             super-type.__rimply lhsT rhsT
 
-struct OpCode plain
+struct Instruction plain
     byte     : u8
     mnemonic : string
     addrmode : AddressingMode
     fun      : (make-instruction-fpT this-type)
+
+    fn execute (self cpu lo hi)
+        self.fun &self &cpu lo hi
    
 fn NYI-instruction (_opcode cpu low high)
     cpu.PC += 1
     print "this instruction is illegal or not yet implemented." (hex _opcode.byte)
     ;
 
-global opcode-table : (Array OpCode)
+global opcode-table : (Array Instruction)
 for i in (range 256)
     'append opcode-table
-        OpCode
+        Instruction
             byte = (i as u8)
             mnemonic = "NYI"
             addrmode = AddressingMode.Implicit
@@ -229,7 +232,7 @@ sugar instruction (mnemonic opcodes...)
 
     inline gen-opcode-table-entry (opcode mnemonic addrmode fun)
         opcode-table @ (opcode as u8) =
-            OpCode
+            Instruction
                 byte = (opcode as u8)
                 fun = fun
                 addrmode = addrmode

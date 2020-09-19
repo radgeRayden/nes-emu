@@ -57,6 +57,15 @@ struct CPUState
             self.mmem @ idx = (imply v u8)
             ;
 
+    fn next (self optable)
+        pc := self.PC
+        op := self.mmem @ pc
+        lo := self.mmem @ (pc + 1)
+        hi := self.mmem @ (pc + 2)
+        instruction := optable @ op
+        'execute instruction self lo hi
+        ;
+
 
 do
     let CPUState StatusFlag MemoryAddress
