@@ -69,6 +69,38 @@ enum AddressingMode plain
         else
             super-type.__rimply lhsT rhsT
 
+
+fn get-instruction-length (addrmode)
+    switch (addrmode as AddressingMode)
+    case AddressingMode.Implicit
+        1
+    case AddressingMode.Accumulator
+        1
+    case AddressingMode.Immediate
+        2
+    case AddressingMode.ZeroPage
+        2
+    case AddressingMode.ZeroPageX
+        2
+    case AddressingMode.ZeroPageY
+        2
+    case AddressingMode.Relative
+        2
+    case AddressingMode.Absolute
+        3
+    case AddressingMode.AbsoluteX
+        3
+    case AddressingMode.AbsoluteY
+        3
+    case AddressingMode.Indirect
+        3
+    case AddressingMode.IndirectX
+        2
+    case AddressingMode.IndirectY
+        2
+    default
+        unreachable;
+
 struct Instruction plain
     byte     : u8
     mnemonic : string
@@ -77,7 +109,10 @@ struct Instruction plain
 
     fn execute (self cpu lo hi)
         self.fun &self &cpu lo hi
-   
+
+    fn length (self)
+        get-instruction-length self.addrmode
+
 fn NYI-instruction (_opcode cpu low high)
     cpu.PC += 1
     print "this instruction is illegal or not yet implemented." (hex _opcode.byte)
@@ -154,37 +189,6 @@ sugar instruction (mnemonic opcodes...)
             body...
         default
             error "expected an `execute` block"
-
-    fn get-instruction-length (addrmode)
-        switch (addrmode as AddressingMode)
-        case AddressingMode.Implicit
-            1
-        case AddressingMode.Accumulator
-            1
-        case AddressingMode.Immediate
-            2
-        case AddressingMode.ZeroPage
-            2
-        case AddressingMode.ZeroPageX
-            2
-        case AddressingMode.ZeroPageY
-            2
-        case AddressingMode.Relative
-            2
-        case AddressingMode.Absolute
-            3
-        case AddressingMode.AbsoluteX
-            3
-        case AddressingMode.AbsoluteY
-            3
-        case AddressingMode.Indirect
-            3
-        case AddressingMode.IndirectX
-            2
-        case AddressingMode.IndirectY
-            2
-        default
-            unreachable;
 
     inline build-instruction-function (addressing-mode)
         let router =

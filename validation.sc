@@ -21,7 +21,13 @@ struct RegisterSnapshot
     operand-high : (Option u8)
 
     inline __== (lhsT rhsT)
-        dump lhsT rhsT
+        static-if (lhsT == rhsT)
+            inline (l r)
+                va-lfold true
+                    inline (__ f result)
+                        let k = (keyof f.Type)
+                        result and ((getattr l k) == (getattr r k))
+                    this-type.__fields__
 
 fn parse-log (path)
     using stdio
@@ -74,6 +80,33 @@ fn parse-log (path)
 
     fclose fhandle
     deref logged-state
+
+fn take-register-snapshot (cpu)
+    let op = (opcodes.opcode-table @ (cpu.mmem @ cpu.PC))
+    let optT = (Option u8)
+    # next two bytes after opcode
+    let b1 b2 = (cpu.mmem @ (cpu.PC + 1)) (cpu.mmem @ (cpu.PC + 2))
+    let lo hi =
+        match ('length op)
+        case 1
+            _ (optT.None) (optT.None)
+        case 2
+            _ (optT b1) (optT.None)
+        default
+            _ (optT b1) (optT b2)
+
+    RegisterSnapshot
+        A  = cpu.RA
+        X  = cpu.RX
+        Y  = cpu.RY
+        PC = cpu.PC
+        SP  = cpu.RS
+        P  = cpu.RP
+        opcode = op.byte
+        mnemonic = op.mnemonic
+        operand-low = lo
+        operand-high = hi
+
 fn dump-memory (cpu path)
     using stdio
     let fhandle = (fopen path "wb")
