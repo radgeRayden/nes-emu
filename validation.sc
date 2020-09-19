@@ -185,7 +185,7 @@ for i entry in (enumerate log-snapshots)
     using import radlib.string-utils
     using import testing
     let current = (take-register-snapshot state)
-    print i current
+    print (i + 1) current
     equal? := entry == current
     if (not equal?) (dump-memory state "nestest.dump")
     test equal?
