@@ -395,6 +395,26 @@ fn init-instructions ()
         fset ZF (acc == operand)
         fset NF ((acc - operand) & 0x80)
     
+    """"Compare X Register
+    instruction CPX
+        0xE0 -> immediate
+        0xE4 -> zero-page
+        0xEC -> absolute
+    execute
+        fset CF (rx >= operand)
+        fset ZF (rx == operand)
+        fset NF ((rx - operand) & 0x80)
+
+    """"Compare Y Register
+    instruction CPY
+        0xC0 -> immediate
+        0xC4 -> zero-page
+        0xCC -> absolute
+    execute
+        fset CF (ry >= operand)
+        fset ZF (ry == operand)
+        fset NF ((ry - operand) & 0x80)
+  
     """"Exclusive OR
     instruction EOR
         0x49 -> immediate
@@ -409,6 +429,14 @@ fn init-instructions ()
         acc ^= operand
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
+
+    """"Increment Y Register
+    instruction INY
+        0xC8 -> implicit
+    execute
+        ry += 1
+        fset ZF (ry == 0)
+        fset NF (ry & 0x80)
 
     """"Jump
     instruction JMP
@@ -451,6 +479,18 @@ fn init-instructions ()
         fset ZF (rx == 0)
         fset NF (rx & 0x80)
 
+    """"Load Y Register
+    instruction LDY
+        0xA0 -> immediate
+        0xA4 -> zero-page
+        0xB4 -> zero-pageX
+        0xAC -> absolute
+        0xBC -> absoluteX
+    execute
+        ry = operand
+        fset ZF (ry == 0)
+        fset NF (ry & 0x80)
+   
     """"Logical Shift Right
     instruction LSR
         0x4A -> accumulator
@@ -522,6 +562,26 @@ fn init-instructions ()
         0x60 -> implicit
     execute
         pc = ((pull-stack 2) + 1)
+
+    """"Subtract with Carry
+    instruction SBC
+        0xE9 -> immediate
+        0xE5 -> zero-page
+        0xF5 -> zero-pageX
+        0xED -> absolute
+        0xFD -> absoluteX
+        0xF9 -> absoluteY
+        0xE1 -> indirectX
+        0xF1 -> indirectY
+    execute
+        carry  := (? (fset? CF) 1:u8 0:u8)
+        result := acc - operand - (1:u8 - carry)
+        overflow? := (((acc ^ result) & (operand ^ result)) & 0x80)
+        fset VF overflow?
+        fset CF (not overflow?)
+        acc = result
+        fset ZF (acc == 0)
+        fset NF (acc & 0x80)
 
     """"Set Carry Flag
     instruction SEC
