@@ -275,10 +275,11 @@ fn init-instructions ()
         0x61 -> indirectX
         0x71 -> indirectY
     execute
-        temp := (acc as u16) + operand
-        fset CF (temp > 0xFF)
-        acc = (temp as u8)
-        # fset VF ???
+        carry  := (? (fset? CF) 1 0)
+        result := (acc as u16) + operand + carry
+        fset VF (((acc ^ result) & (operand ^ result)) & 0x80)
+        fset CF (result > 0xFF)
+        acc = (result as u8)
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
 
