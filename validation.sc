@@ -16,7 +16,7 @@ struct RegisterSnapshot
     SP : u8
 
     opcode : u8
-    mnemonic : rawstring
+    mnemonic : (array i8 4)
     operand-low  : (Option u8)
     operand-high : (Option u8)
 
@@ -29,10 +29,33 @@ struct RegisterSnapshot
                         result and ((getattr l k) == (getattr r k))
                     this-type.__fields__
 
+    inline __tostring (self)
+        ..
+            va-map
+                inline (f)
+                    let k = (keyof f.Type)
+                    let attr = (getattr self k)
+                    static-match (typeof attr)
+                    case (u8 or u16)
+                        .. (tostring k) ":" (hex attr) " "
+                    case (array i8 4)
+                        local s = attr
+                        (string &s) .. " "
+                    case (Option u8)
+                        try
+                            (hex ('unwrap attr)) .. " "
+                        else
+                            "   "
+                    default
+                        ""
+                this-type.__fields__
+
+
 fn parse-log (path)
     using stdio
     using _string
     let fhandle = (fopen path "r")
+    assert (fhandle != null)
 
     fseek fhandle 0 SEEK_END
     let flen = (ftell fhandle)
@@ -95,6 +118,9 @@ fn take-register-snapshot (cpu)
         default
             _ (optT b1) (optT b2)
 
+    local mnemonic : (array i8 4)
+    for i c in (enumerate op.mnemonic)
+        mnemonic @ i = c
     RegisterSnapshot
         A  = cpu.RA
         X  = cpu.RX
@@ -103,7 +129,7 @@ fn take-register-snapshot (cpu)
         SP  = cpu.RS
         P  = cpu.RP
         opcode = op.byte
-        mnemonic = op.mnemonic
+        mnemonic = mnemonic
         operand-low = lo
         operand-high = hi
 
@@ -141,6 +167,7 @@ fn load-iNES (cpu rom)
     memcpy prg-rom-destptr prg-romptr prg-rom-size
 
 nestest-path := module-dir .. "/nes-test-roms/other/nestest.nes"
+nestest-log-path := module-dir .. "/nes-test-roms/other/nestest.log"
 let romdata =
     try
         read-whole-file nestest-path
@@ -151,40 +178,15 @@ let romdata =
 global state : CPUState
 load-iNES state romdata
 
-fn format-operand (addrmode lo hi)
-    using opcodes
-
-    switch addrmode
-    case AddressingMode.Immediate
-        .. "#$" (hex lo)
-    case AddressingMode.Absolute
-        .. "$" (hex (joinLE lo hi))
-    default
-        ""
-
-# fn print-cpu-state ()
-#     let op lo hi = (fetch)
-#     local opcode = (opcodes.opcode-table @ op)
-#     print
-#         fmt-hex state.PC
-#         "\t"
-#         fmt-hex opcode.byte
-#         fmt-hex lo
-#         fmt-hex hi
-#         opcode.mnemonic
-#         format-operand opcode.addrmode lo hi
-#         opcode.addrmode
-#         "\t\t"
-#         .. "A:" (fmt-hex state.RA)
-#         .. "X:" (fmt-hex state.RX)
-#         .. "Y:" (fmt-hex state.RY)
-#         .. "P:" (fmt-hex state.RP)
-#         .. "SP:" (fmt-hex state.RS)
-
-loop ()
-    if (state.PC >= (CPUState.AddressableMemorySize - 1))
-        print "finished" (fmt-hex state.PC) (fmt-hex state.RA)
-        break;
+let log-snapshots = (parse-log nestest-log-path)
+# print (countof log-snapshots)
+# for this test we set PC to 0xc000 as instructed by the test documentation (nestest.txt)
+state.PC = 0xC000
+for i entry in (enumerate log-snapshots)
+    using import radlib.string-utils
+    using import testing
+    let current = (take-register-snapshot state)
+    test (entry == current) f"entry ${i} didn't match CPU state: ${current}"
     'next state opcodes.opcode-table
     ;
 
