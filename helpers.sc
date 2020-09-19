@@ -1,6 +1,6 @@
 using import Array
 
-fn fmt-hex (i)
+fn... fmt-hex (i, color? = true)
     width := (sizeof i) * 2
     representation := (hex i)
     padding := width - (countof representation)
@@ -12,7 +12,10 @@ fn fmt-hex (i)
             .. (string buf padding) representation
         else
             (hex i)
-    sc_default_styler 'style-number str
+    if color?
+        sc_default_styler 'style-number str
+    else
+        str
 
 fn read-whole-file (path)
     import radlib.libc

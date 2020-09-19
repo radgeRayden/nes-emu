@@ -42,7 +42,8 @@ struct RegisterSnapshot
             else
                 "  "
         s := self
-        let op A X Y P SP = (va-map hex s.opcode s.A s.X s.Y s.P s.SP)
+        let A X Y P SP = (va-map fmt-hex s.A s.X s.Y s.P s.SP)
+        let op = (fmt-hex s.opcode false)
         local mnemonic = s.mnemonic
         f"${fmt-hex s.PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}"
 
