@@ -9,9 +9,9 @@ fn fmt-hex (i)
             let buf = (alloca-array i8 padding)
             for i in (range padding)
                 buf @ i = 48:i8 # "0"
-            .. "0x" (string buf padding) representation
+            .. (string buf padding) representation
         else
-            .. "0x" (hex i)
+            (hex i)
     sc_default_styler 'style-number str
 
 fn read-whole-file (path)

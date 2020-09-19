@@ -29,27 +29,22 @@ struct RegisterSnapshot
                         result and ((getattr l k) == (getattr r k))
                     this-type.__fields__
 
-    inline __tostring (self)
-        ..
-            va-map
-                inline (f)
-                    let k = (keyof f.Type)
-                    let attr = (getattr self k)
-                    static-match (typeof attr)
-                    case (u8 or u16)
-                        .. (tostring k) ":" (hex attr) " "
-                    case (array i8 4)
-                        local s = attr
-                        (string &s) .. " "
-                    case (Option u8)
-                        try
-                            (hex ('unwrap attr)) .. " "
-                        else
-                            "   "
-                    default
-                        ""
-                this-type.__fields__
-
+    inline __repr (self)
+        using import radlib.string-utils
+        let lo =
+            try
+                fmt-hex ('unwrap self.operand-low)
+            else
+                "  "
+        let hi =
+            try
+                fmt-hex ('unwrap self.operand-high)
+            else
+                "  "
+        s := self
+        let op A X Y P SP = (va-map hex s.opcode s.A s.X s.Y s.P s.SP)
+        local mnemonic = s.mnemonic
+        f"${fmt-hex s.PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}"
 
 fn parse-log (path)
     using stdio
@@ -186,7 +181,11 @@ for i entry in (enumerate log-snapshots)
     using import radlib.string-utils
     using import testing
     let current = (take-register-snapshot state)
-    test (entry == current) f"entry ${i} didn't match CPU state: ${current}"
+    print current
+    test (entry == current)
+        f""""
+             entry ${i} didn't match CPU state, log says:
+             ${entry}
     'next state opcodes.opcode-table
     ;
 
