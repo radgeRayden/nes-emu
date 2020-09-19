@@ -178,7 +178,7 @@ global state : CPUState
 load-iNES state romdata
 
 let log-snapshots = (parse-log nestest-log-path)
-# print (countof log-snapshots)
+
 # for this test we set PC to 0xc000 as instructed by the test documentation (nestest.txt)
 state.PC = 0xC000
 for i entry in (enumerate log-snapshots)
