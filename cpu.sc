@@ -48,32 +48,38 @@ struct CPUState
     inline flag-set? (self flag)
         (self.RP & (1:u8 << (flag as u8))) as bool
 
+    # the stack pointer indicates where the stack can write *next*;
+    # this means that we write to the position where sp is, then decrement it,
+    # and pull from sp + 1.
+    # https://wiki.nesdev.com/w/index.php/Stack
     fn push-stack (self v)
         let vT = (typeof v)
         sp := self.RS
         static-if ((storageof vT) == u16)
             let lo hi = (separateLE v)
-            sp -= 2
             let idx = (joinLE sp 0x01)
-            self.mmem @ idx = lo
-            self.mmem @ (idx + 1) = hi
+            self.mmem @ (idx - 1) = lo
+            self.mmem @ idx = hi
+            sp -= 2
             ;
         else
-            sp -= 1
             let idx = (joinLE sp 0x01)
             self.mmem @ idx = (imply v u8)
+            sp -= 1
             ;
 
     inline pull-stack (self n)
         sp := self.RS
-        let idx = (joinLE sp 0x01)
+        let idx = ((joinLE sp 0x01) + 1)
         static-match n
         case 1
+            result := self.mmem @ idx
             sp += 1
-            self.mmem @ idx
+            result
         case 2
+            let result = (joinLE (self.mmem @ idx) (self.mmem @ (idx + 1)))
             sp += 2
-            joinLE (self.mmem @ idx) (self.mmem @ (idx + 1))
+            result
         default
             static-error "must always pull one or two bytes from the stack"
 
