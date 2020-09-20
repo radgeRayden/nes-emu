@@ -173,7 +173,7 @@ define-scope operand-routers
         AbsoluteOperand (joinLE rl rh) cpu
 
     inline indirectY (cpu lo hi)
-        iaddr := (joinLE lo 0x00)
+        iaddr := ((joinLE lo 0x00) as u8)
         let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
         AbsoluteOperand ((joinLE rl rh) + cpu.RY) cpu
 
