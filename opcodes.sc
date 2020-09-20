@@ -415,6 +415,22 @@ fn init-instructions ()
         fset ZF (ry == operand)
         fset NF ((ry - operand) & 0x80)
   
+    """"Decrement X Register
+    instruction DEX
+        0xCA -> implicit
+    execute
+        rx -= 1
+        fset ZF (rx == 0)
+        fset NF (rx & 0x80)
+
+    """"Decrement Y Register
+    instruction DEY
+        0x88 -> implicit
+    execute
+        ry -= 1
+        fset ZF (ry == 0)
+        fset NF (ry & 0x80)
+
     """"Exclusive OR
     instruction EOR
         0x49 -> immediate
@@ -429,6 +445,14 @@ fn init-instructions ()
         acc ^= operand
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
+
+    """"Increment X Register
+    instruction INX
+        0xE8 -> implicit
+    execute
+        rx += 1
+        fset ZF (rx == 0)
+        fset NF (rx & 0x80)
 
     """"Increment Y Register
     instruction INY
@@ -623,6 +647,52 @@ fn init-instructions ()
         0x8E -> absolute
     execute
         operand = rx
+
+    """"Transfer Accumulator to X
+    instruction TAX
+        0xAA -> implicit
+    execute
+        rx = acc
+        fset ZF (rx == 0)
+        fset NF (rx & 0x80)
+
+    """"Transfer Accumulator to Y
+    instruction TAY
+        0xA8 -> implicit
+    execute
+        ry = acc
+        fset ZF (ry == 0)
+        fset NF (ry & 0x80)
+
+    """"Transfer Stack Pointer to X
+    instruction TSX
+        0xBA -> implicit
+    execute
+        rx = sp
+        fset ZF (rx == 0)
+        fset NF (rx & 0x80)
+
+    """"Transfer X to Accumulator
+    instruction TXA
+        0x8A -> implicit
+    execute
+        acc = rx
+        fset ZF (acc == 0)
+        fset NF (acc & 0x80)
+
+    """"Transfer X to Stack Pointer
+    instruction TXS
+        0x9A -> implicit
+    execute
+        sp = rx
+
+    """"Transfer Y to Accumulator
+    instruction TYA
+        0x98 -> implicit
+    execute
+        acc = ry
+        fset ZF (acc == 0)
+        fset NF (acc & 0x80)
 
 init-instructions;
 
