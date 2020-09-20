@@ -578,7 +578,6 @@ fn init-instructions ()
         twos  := (~ (imply operand u8)) + 1:u8
         old   := (deref acc)
         oldp? := old < 128
-        report carry acc operand twos
 
         acc += twos + (carry - 1:u8)
         fset VF
