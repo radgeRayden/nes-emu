@@ -307,9 +307,9 @@ fn init-instructions ()
         0x1E -> absoluteX
     execute
         fset CF (acc & 0x80)
-        acc <<= 1
-        fset ZF (acc == 0)
-        fset NF (acc & 0x80)
+        operand <<= 1
+        fset ZF (operand == 0)
+        fset NF (operand & 0x80)
 
     """"Branch if Carry Clear
     instruction BCC
@@ -622,8 +622,8 @@ fn init-instructions ()
         operand >>= 1
         operand |= (carry << 7)
         fset CF bit0
-        fset ZF (acc == 0)
-        fset NF (acc & 0x80)
+        fset ZF (operand == 0)
+        fset NF (operand & 0x80)
 
     """"Return from Interrupt
     instruction RTI
