@@ -55,7 +55,8 @@ struct RegisterSnapshot
                         sc_default_styler 'style-string str
                         sc_default_styler 'style-comment str
 
-        f"${PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}  ${flags}"
+        let mode = (tostring ((opcodes.opcode-table @ s.opcode) . addrmode))
+        f"${PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}  ${flags}  ${mode}"
 
 fn parse-log (path)
     using stdio
@@ -195,7 +196,7 @@ for i entry in (enumerate log-snapshots)
     using import radlib.string-utils
     using import testing
     let current = (take-register-snapshot state)
-    print current (i + 1)
+    print current "\t" (i + 1)
     equal? := entry == current
     if (not equal?) (dump-memory state "nestest.dump")
     test equal?
