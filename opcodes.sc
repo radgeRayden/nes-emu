@@ -581,7 +581,7 @@ fn init-instructions ()
         0x11 -> indirectY
     execute
         acc |= operand
-        fset CF (acc == 0)
+        fset ZF (acc == 0)
         fset NF (acc & 0x80)
 
     """"Push Accumulator
