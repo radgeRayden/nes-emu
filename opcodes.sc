@@ -168,7 +168,7 @@ define-scope operand-routers
         MemoryAddress (joinLE rl rh)
 
     inline indirectX (cpu lo hi)
-        iaddr := (joinLE (lo + cpu.RX) 0x00)
+        iaddr := ((joinLE (lo + cpu.RX) 0x00) as u8) # ensure wrap around
         let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
         AbsoluteOperand (joinLE rl rh) cpu
 
