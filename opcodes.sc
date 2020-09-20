@@ -428,6 +428,17 @@ fn init-instructions ()
         fset ZF (ry == operand)
         fset NF ((ry - operand) & 0x80)
   
+    """"Decrement Memory
+    instruction DEC
+        0xC6 -> zero-page
+        0xD6 -> zero-pageX
+        0xCE -> absolute
+        0xDE -> absoluteX
+    execute
+        operand -= 1
+        fset ZF (operand == 0)
+        fset NF (operand & 0x80)
+
     """"Decrement X Register
     instruction DEX
         0xCA -> implicit
@@ -458,6 +469,17 @@ fn init-instructions ()
         acc ^= operand
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
+
+    """"Increment Memory
+    instruction INC
+        0xE6 -> zero-page
+        0xF6 -> zero-pageX
+        0xEE -> absolute
+        0xFE -> absoluteX
+    execute
+        operand += 1
+        fset ZF (operand == 0)
+        fset NF (operand & 0x80)
 
     """"Increment X Register
     instruction INX
@@ -701,6 +723,14 @@ fn init-instructions ()
         0x8E -> absolute
     execute
         operand = rx
+
+    """"Store Y Register
+    instruction STY
+        0x84 -> zero-page
+        0x94 -> zero-pageX
+        0x8C -> absolute
+    execute
+        operand = ry
 
     """"Transfer Accumulator to X
     instruction TAX
