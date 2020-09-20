@@ -325,7 +325,7 @@ fn init-instructions ()
         0x0E -> absolute
         0x1E -> absoluteX
     execute
-        fset CF (acc & 0x80)
+        fset CF (operand & 0x80)
         operand <<= 1
         fset ZF (operand == 0)
         fset NF (operand & 0x80)
