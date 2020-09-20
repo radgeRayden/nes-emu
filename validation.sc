@@ -55,8 +55,7 @@ struct RegisterSnapshot
                         sc_default_styler 'style-string str
                         sc_default_styler 'style-comment str
 
-        let mode = (tostring ((opcodes.opcode-table @ s.opcode) . addrmode))
-        f"${PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}  ${flags}  ${mode}"
+        f"${PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}  ${flags}"
 
 fn parse-log (path)
     using stdio
@@ -192,13 +191,25 @@ let log-snapshots = (parse-log nestest-log-path)
 
 # for this test we set PC to 0xc000 as instructed by the test documentation (nestest.txt)
 state.PC = 0xC000
+
+LOG_EVERY_INSTRUCTION := false
+
+fn log-instruction (snap line)
+    let mode = (tostring ((opcodes.opcode-table @ snap.opcode) . addrmode))
+    print snap "\t" mode "\t" line
+
 for i entry in (enumerate log-snapshots)
     using import radlib.string-utils
     using import testing
     let current = (take-register-snapshot state)
-    print current "\t" (i + 1)
+
+    static-if LOG_EVERY_INSTRUCTION
+        log-instruction current (i + 1)
+
     equal? := entry == current
     if (not equal?) (dump-memory state "nestest.dump")
+        static-if (not LOG_EVERY_INSTRUCTION)
+            log-instruction current (i + 1)
     test equal?
         f""""
              entry ${i + 1} didn't match CPU state, log says:
