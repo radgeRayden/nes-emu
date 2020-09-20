@@ -572,6 +572,29 @@ fn init-instructions ()
     """"No Operation
     instruction NOP
         0xEA -> implicit
+        0x04 -> zero-page # undocumented
+        0x44 -> zero-page # undocumented
+        0x64 -> zero-page # undocumented
+        0x0C -> absolute # undocumented
+        0x14 -> zero-pageX # undocumented
+        0x34 -> zero-pageX # undocumented
+        0x54 -> zero-pageX # undocumented
+        0x74 -> zero-pageX # undocumented
+        0xD4 -> zero-pageX # undocumented
+        0xF4 -> zero-pageX # undocumented
+        0x1A -> implicit # undocumented
+        0x3A -> implicit # undocumented
+        0x5A -> implicit # undocumented
+        0x7A -> implicit # undocumented
+        0xDA -> implicit # undocumented
+        0xFA -> implicit # undocumented
+        0x80 -> immediate # undocumented
+        0x1C -> absoluteX # undocumented
+        0x3C -> absoluteX # undocumented
+        0x5C -> absoluteX # undocumented
+        0x7C -> absoluteX # undocumented
+        0xDC -> absoluteX # undocumented
+        0xFC -> absoluteX # undocumented
     execute
         ;
 
