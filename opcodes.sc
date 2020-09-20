@@ -161,14 +161,20 @@ define-scope operand-routers
         AbsoluteOperand ((joinLE lo hi) + cpu.RY) cpu
 
     inline indirect (cpu lo hi)
-        # fetch 2 bytes at the indirect address provided
-        iaddr := (joinLE lo hi)
-        let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
+        # http://obelisk.me.uk/6502/reference.html#JMP
+        # here we simulate the indirect fetch bug that makes it so that
+        # if the MSB is on another page, it's actually fetched from the beginning
+        # of the page.
+        let cross-page? = (lo == 0xFF)
+        let iaddr = (joinLE lo hi)
+        let rl rh =
+            cpu.mmem @ iaddr
+            cpu.mmem @ (? cross-page? (joinLE 0x00 hi) (iaddr + 1))
         # return the location stored at this address
         MemoryAddress (joinLE rl rh)
 
     inline indirectX (cpu lo hi)
-        iaddr := ((joinLE (lo + cpu.RX) 0x00) as u8) # ensure wrap around
+        iaddr := (joinLE (lo + cpu.RX) 0x00) as u8 # ensure wrap around
         let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
         AbsoluteOperand (joinLE rl rh) cpu
 
