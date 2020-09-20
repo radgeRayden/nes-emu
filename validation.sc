@@ -218,5 +218,6 @@ for i entry in (enumerate log-snapshots)
     ;
 
 print "Validation succesful!"
+dump-memory state "nestest.dump"
 
 none
