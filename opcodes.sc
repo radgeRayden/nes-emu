@@ -298,6 +298,19 @@ fn init-instructions ()
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
 
+    """"Arithmetic Shift Left
+    instruction ASL
+        0x0A -> accumulator
+        0x06 -> zero-page
+        0x16 -> zero-pageX
+        0x0E -> absolute
+        0x1E -> absoluteX
+    execute
+        fset CF (acc & 0x80)
+        acc <<= 1
+        fset ZF (acc == 0)
+        fset NF (acc & 0x80)
+
     """"Branch if Carry Clear
     instruction BCC
         0x90 -> relative
@@ -580,6 +593,47 @@ fn init-instructions ()
         svalue := (pull-stack 1)
         rp = ((svalue & (~ 0x30:u8)) | mask)
         ;
+
+    """"Rotate Left
+    instruction ROL
+        0x2A -> accumulator
+        0x26 -> zero-page
+        0x36 -> zero-pageX
+        0x2E -> absolute
+        0x3E -> absoluteX
+    execute
+        let carry = (? (fset? CF) 1:u8 0:u8)
+        fset CF (operand & 0x80)
+        operand <<= 1
+        operand |= carry
+        fset ZF (operand == 0)
+        fset NF (operand & 0x80)
+
+    """"Rotate Right
+    instruction ROR
+        0x6A -> accumulator
+        0x66 -> zero-page
+        0x76 -> zero-pageX
+        0x6E -> absolute
+        0x7E -> absoluteX
+    execute
+        let carry = (? (fset? CF) 1:u8 0:u8)
+        bit0 := (operand & 0x01)
+        operand >>= 1
+        operand |= (carry << 7)
+        fset CF bit0
+        fset ZF (acc == 0)
+        fset NF (acc & 0x80)
+
+    """"Return from Interrupt
+    instruction RTI
+        0x40 -> implicit
+    execute
+        # see PLP
+        mask := (rp & 0x30:u8)
+        svalue := (pull-stack 1)
+        rp = ((svalue & (~ 0x30:u8)) | mask)
+        pc = (pull-stack 2)
 
     """"Return from Subroutine
     instruction RTS
