@@ -530,6 +530,21 @@ fn init-instructions ()
         push-stack (pc - 1)
         pc = operand
 
+    """"Load A and X simultaneously
+    # this instruction is undocumented.
+    instruction LAX
+        0xA3 -> indirectX
+        0xA7 -> zero-page
+        0xAF -> absolute
+        0xB3 -> indirectY
+        0xB7 -> zero-pageY
+        0xBF -> absoluteY
+    execute
+        acc = operand
+        rx = acc
+        fset ZF (rx == 0)
+        fset NF (rx & 0x80)
+
     """"Load Accumulator
     instruction LDA
         0xA9 -> immediate
@@ -704,6 +719,16 @@ fn init-instructions ()
         0x60 -> implicit
     execute
         pc = ((pull-stack 2) + 1)
+
+    """"Store A & X
+    # this instruction is undocumented
+    instruction SAX
+        0x83 -> indirectX
+        0x87 -> zero-page
+        0x8F -> absolute
+        0x97 -> zero-pageY
+    execute
+        operand = (acc & rx)
 
     """"Subtract with Carry
     instruction SBC
