@@ -448,6 +448,7 @@ fn init-instructions ()
         fset NF ((ry - operand) & 0x80)
   
     """"Decrement then Compare
+    # this instruction is undocumented
     instruction DCP
         0xC3 -> indirectX
         0xC7 -> zero-page
@@ -530,6 +531,33 @@ fn init-instructions ()
         ry += 1
         fset ZF (ry == 0)
         fset NF (ry & 0x80)
+
+    """"INC+SBC
+    # this instruction is undocumented
+    instruction ISB
+        0xE3 -> indirectX
+        0xE7 -> zero-page
+        0xEF -> absolute
+        0xF3 -> indirectY
+        0xF7 -> zero-pageX
+        0xFB -> absoluteY
+        0xFF -> absoluteX
+    execute
+        operand += 1
+        carry := (? (fset? CF) 1:u8 0:u8)
+        twos  := (~ (imply operand u8)) + 1:u8
+        old   := (deref acc)
+        oldp? := old < 128
+
+        acc += twos + (carry - 1:u8)
+        fset VF
+            if (operand < 128)
+                ? oldp? ((acc > old) and (acc < 128)) (acc < 128)
+            else
+                ? oldp? ((acc < old) and (acc > 128)) (acc > 128)
+        fset CF (acc <= old)
+        fset ZF (acc == 0)
+        fset NF (acc & 0x80)
 
     """"Jump
     instruction JMP
@@ -688,6 +716,25 @@ fn init-instructions ()
         rp = ((svalue & (~ 0x30:u8)) | mask)
         ;
 
+    """"ROL then AND
+    # this instruction is undocumented
+    instruction RLA
+        0x23 -> indirectX
+        0x27 -> zero-page
+        0x2F -> absolute
+        0x33 -> indirectY
+        0x37 -> zero-pageX
+        0x3B -> absoluteY
+        0x3F -> absoluteX
+    execute
+        let carry = (? (fset? CF) 1:u8 0:u8)
+        fset CF (operand & 0x80)
+        operand <<= 1
+        operand |= carry
+        acc &= operand
+        fset ZF (acc == 0)
+        fset NF (acc & 0x80)
+
     """"Rotate Left
     instruction ROL
         0x2A -> accumulator
@@ -757,6 +804,9 @@ fn init-instructions ()
         0xF1 -> indirectY
         0xEB -> immediate # undocumented
     execute
+        # NOTE: at this point this differs from ISB, but hasn't failed validation.
+        # One of them is certainly wrong, and I think it's this one (possibly both,
+        # in different ways).
         carry := (? (fset? CF) 1:u8 0:u8)
         twos  := (~ (imply operand u8)) + 1:u8
         old   := (deref acc)
@@ -786,6 +836,23 @@ fn init-instructions ()
         0x78 -> implicit
     execute
         fset IF true
+
+    """"ASL then ORA
+    # this instruction is undocumented
+    instruction SLO
+        0x03 -> indirectX
+        0x07 -> zero-page
+        0x0F -> absolute
+        0x13 -> indirectY
+        0x17 -> zero-pageX
+        0x1B -> absoluteY
+        0x1F -> absoluteX
+    execute
+        fset CF (operand & 0x80)
+        operand <<= 1
+        acc |= operand
+        fset ZF (acc == 0)
+        fset NF (acc & 0x80)
 
     """"Store Accumulator
     instruction STA
