@@ -447,6 +447,21 @@ fn init-instructions ()
         fset ZF (ry == operand)
         fset NF ((ry - operand) & 0x80)
   
+    """"Decrement then Compare
+    instruction DCP
+        0xC3 -> indirectX
+        0xC7 -> zero-page
+        0xCF -> absolute
+        0xD3 -> indirectY
+        0xD7 -> zero-pageX
+        0xDB -> absoluteY
+        0xDF -> absoluteX
+    execute
+        operand -= 1
+        fset CF (acc >= operand)
+        fset ZF (acc == operand)
+        fset NF ((acc - operand) & 0x80)
+
     """"Decrement Memory
     instruction DEC
         0xC6 -> zero-page
@@ -740,6 +755,7 @@ fn init-instructions ()
         0xF9 -> absoluteY
         0xE1 -> indirectX
         0xF1 -> indirectY
+        0xEB -> immediate # undocumented
     execute
         carry := (? (fset? CF) 1:u8 0:u8)
         twos  := (~ (imply operand u8)) + 1:u8
