@@ -766,6 +766,35 @@ fn init-instructions ()
         fset ZF (operand == 0)
         fset NF (operand & 0x80)
 
+    """"ROR then ADC
+    # this instruction is undocumented
+    instruction RRA
+        0x63 -> indirectX
+        0x67 -> zero-page
+        0x6F -> absolute
+        0x73 -> indirectY
+        0x77 -> zero-pageX
+        0x7B -> absoluteY
+        0x7F -> absoluteX
+    execute
+        # ROR
+        let carry = (? (fset? CF) 1:u8 0:u8)
+        bit0 := (operand & 0x01)
+        operand >>= 1
+        operand |= (carry << 7)
+        fset CF bit0
+        fset ZF (operand == 0)
+        fset NF (operand & 0x80)
+
+        # ADC
+        carry  := (? (fset? CF) 1:u8 0:u8)
+        result := acc + operand + carry
+        fset VF (((acc ^ result) & (operand ^ result)) & 0x80)
+        fset CF (result < acc)
+        acc = result
+        fset ZF (acc == 0)
+        fset NF (acc & 0x80)
+
     """"Return from Interrupt
     instruction RTI
         0x40 -> implicit
@@ -851,6 +880,23 @@ fn init-instructions ()
         fset CF (operand & 0x80)
         operand <<= 1
         acc |= operand
+        fset ZF (acc == 0)
+        fset NF (acc & 0x80)
+
+    """"LSR then EOR
+    # this instruction is undocumented
+    instruction SRE
+        0x43 -> indirectX
+        0x47 -> zero-page
+        0x4F -> absolute
+        0x53 -> indirectY
+        0x57 -> zero-pageX
+        0x5B -> absoluteY
+        0x5F -> absoluteX
+    execute
+        fset CF (operand & 0x1)
+        operand >>= 1
+        acc ^= operand
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
 

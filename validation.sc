@@ -217,4 +217,6 @@ for i entry in (enumerate log-snapshots)
     'next state opcodes.opcode-table
     ;
 
+print "Validation succesful!"
+
 none
