@@ -99,9 +99,9 @@ fn NYI-instruction (_opcode cpu low high)
     print "this instruction is illegal or not yet implemented." (hex _opcode.byte)
     ;
 
-global opcode-table : (Array Instruction)
+global itable : (Array Instruction)
 for i in (range 256)
-    'append opcode-table
+    'append itable
         Instruction
             byte = (i as u8)
             mnemonic = "NYI"
@@ -257,7 +257,7 @@ sugar instruction (mnemonic opcodes...)
                 unquote-splice instruction-code
 
     inline gen-opcode-table-entry (opcode mnemonic addrmode fun)
-        opcode-table @ (opcode as u8) =
+        itable @ (opcode as u8) =
             Instruction
                 byte = (opcode as u8)
                 fun = fun
@@ -977,5 +977,5 @@ fn init-instructions ()
 init-instructions;
 
 do
-    let opcode-table init-instructions AddressingMode
+    let itable init-instructions AddressingMode
     locals;
