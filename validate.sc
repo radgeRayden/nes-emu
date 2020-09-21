@@ -118,7 +118,7 @@ fn parse-log (path)
     deref logged-state
 
 fn take-register-snapshot (cpu)
-    let op = (opcodes.opcode-table @ (cpu.mmem @ cpu.PC))
+    let op = (opcodes.itable @ (cpu.mmem @ cpu.PC))
     let optT = (Option u8)
     # next two bytes after opcode
     let b1 b2 = (cpu.mmem @ (cpu.PC + 1)) (cpu.mmem @ (cpu.PC + 2))
@@ -200,7 +200,7 @@ state.PC = 0xC000
 LOG_EVERY_INSTRUCTION := false
 
 fn log-instruction (snap line)
-    let mode = (tostring ((opcodes.opcode-table @ snap.opcode) . addrmode))
+    let mode = (tostring ((opcodes.itable @ snap.opcode) . addrmode))
     print snap "\t" mode "\t" line
 
 for i entry in (enumerate log-snapshots)
@@ -219,7 +219,7 @@ for i entry in (enumerate log-snapshots)
         f""""
              entry ${i + 1} didn't match CPU state, log says:
              ${entry}
-    'next state opcodes.opcode-table
+    'next state opcodes.itable
     ;
 
 print "Validation succesful!"
