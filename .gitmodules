@@ -1,6 +1,6 @@
 [submodule "cpath"]
 	path = cpath
 	url = git@github.com:radgeRayden/cpath.git
-[submodule "nes-test-roms"]
-	path = validation/nes-test-roms
+[submodule "validation/nes-test-roms"]
+	path = nes-test-roms
 	url = https://github.com/christopherpow/nes-test-roms
