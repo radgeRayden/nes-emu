@@ -20,38 +20,6 @@ using import Array
 using import .cpu
 using import .helpers
 
-""""This type is used in `absolute` addressing modes to represent
-    a 16-bit wide operand that can be both a literal u16 memory location,
-    or a reference to this location in cpu memory. Whenever assigned to it will
-    store the value on mmem @ addr; if implied to u8 will become the value at mem @ addr.
-    This means that on instructions that can be written with absolute addressing mode,
-    operations with `operand` must observe these rules.
-    Since it needs to be able to address mapped memory, it stores a pointer to it. It's never
-    meant to survive past the instruction execution, so it _should_ never become stale. To get
-    as much safety as we can in this situation we assert that the mmem has been resized
-    so that the full 64Kb are addressable.
-struct AbsoluteOperand
-    addr    : u16
-    mmemptr : (mutable@ u8)
-    inline __typecall (cls addr cpu)
-        assert ((countof cpu.mmem) == CPUState.AddressableMemorySize)
-        super-type.__typecall cls
-            addr = addr
-            mmemptr = cpu.mmem._items
-
-    inline __= (lhsT rhsT)
-        static-if (rhsT < integer)
-            inline (lhs rhs)
-                lhs.mmemptr @ lhs.addr = (rhs as u8)
-
-    inline __imply (lhsT rhsT)
-        static-if (rhsT == MemoryAddress)
-            inline (self)
-                self.addr as MemoryAddress
-        elseif (imply? u8 rhsT)
-            inline (self)
-                imply (self.mmemptr @ self.addr) rhsT
-
 """"The instruction wrapper:
     Takes the Instruction itself (for debugging purposes), a view of the cpu state so it
     can mutate it and the next two bytes after the opcode in memory,
@@ -139,6 +107,38 @@ for i in (range 256)
             mnemonic = "NYI"
             addrmode = AddressingMode.Implicit
             fun = NYI-instruction
+
+""""This type is used in `absolute` addressing modes to represent
+    a 16-bit wide operand that can be both a literal u16 memory location,
+    or a reference to this location in cpu memory. Whenever assigned to it will
+    store the value on mmem @ addr; if implied to u8 will become the value at mem @ addr.
+    This means that on instructions that can be written with absolute addressing mode,
+    operations with `operand` must observe these rules.
+    Since it needs to be able to address mapped memory, it stores a pointer to it. It's never
+    meant to survive past the instruction execution, so it _should_ never become stale. To get
+    as much safety as we can in this situation we assert that the mmem has been resized
+    so that the full 64Kb are addressable.
+struct AbsoluteOperand
+    addr    : u16
+    mmemptr : (mutable@ u8)
+    inline __typecall (cls addr cpu)
+        assert ((countof cpu.mmem) == CPUState.AddressableMemorySize)
+        super-type.__typecall cls
+            addr = addr
+            mmemptr = cpu.mmem._items
+
+    inline __= (lhsT rhsT)
+        static-if (rhsT < integer)
+            inline (lhs rhs)
+                lhs.mmemptr @ lhs.addr = (rhs as u8)
+
+    inline __imply (lhsT rhsT)
+        static-if (rhsT == MemoryAddress)
+            inline (self)
+                self.addr as MemoryAddress
+        elseif (imply? u8 rhsT)
+            inline (self)
+                imply (self.mmemptr @ self.addr) rhsT
 
 define-scope operand-routers
     # opcodes that allow implicit only allow implicit, so we don't have
