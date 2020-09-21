@@ -20,6 +20,8 @@ struct RegisterSnapshot
     operand-low  : (Option u8)
     operand-high : (Option u8)
 
+    cycles : u64
+
     inline __== (lhsT rhsT)
         static-if (lhsT == rhsT)
             inline (l r)
@@ -55,7 +57,7 @@ struct RegisterSnapshot
                         sc_default_styler 'style-string str
                         sc_default_styler 'style-comment str
 
-        f"${PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}  ${flags}"
+        f"${PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}  ${flags} CYC:${s.cycles}"
 
 fn parse-log (path)
     using stdio
@@ -107,6 +109,8 @@ fn parse-log (path)
                 &snap.SP
         assert (ins-byte-count == 5)
 
+        assert (sscanf (reftoptr (line @ 90)) "%llu" &snap.cycles)
+
         'append logged-state snap
         ;
 
@@ -141,6 +145,7 @@ fn take-register-snapshot (cpu)
         mnemonic = mnemonic
         operand-low = lo
         operand-high = hi
+        cycles = cpu.cycles
 
 fn dump-memory (cpu path)
     using stdio
@@ -175,8 +180,8 @@ fn load-iNES (cpu rom)
     let prg-rom-destptr = (reftoptr (cpu.mmem @ 0xc000))
     memcpy prg-rom-destptr prg-romptr prg-rom-size
 
-nestest-path := module-dir .. "/nes-test-roms/other/nestest.nes"
-nestest-log-path := module-dir .. "/nes-test-roms/other/nestest.log"
+nestest-path := module-dir .. "/validation/nes-test-roms/other/nestest.nes"
+nestest-log-path := module-dir .. "/validation/nestest.log"
 let romdata =
     try
         read-whole-file nestest-path

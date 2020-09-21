@@ -27,6 +27,8 @@ struct CPUState
     let AddressableMemorySize = (0xFFFF + 1)
     mmem : (Array u8 AddressableMemorySize)
 
+    cycles : u64
+
     inline __typecall (cls)
         local self = (super-type.__typecall cls)
         'resize self.mmem ('capacity self.mmem)
@@ -36,6 +38,8 @@ struct CPUState
         # just set it to point to start of PRG ROM.
         self.PC = 0x8000
         self.RP = 0x24
+        # starts at 7 because of some init work the cpu does
+        self.cycles = 7
         deref self
 
     inline... set-flag (self, flag : StatusFlag, v : bool)
