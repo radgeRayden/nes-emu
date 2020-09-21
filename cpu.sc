@@ -25,22 +25,24 @@ struct CPUState
     RP : u8  # status
 
     let AddressableMemorySize = (0xFFFF + 1)
-    mmem : (Array u8 AddressableMemorySize)
+    let MappedMemoryT = (Array u8 AddressableMemorySize)
+    mmem : MappedMemoryT
 
     cycles : u64
 
     inline __typecall (cls)
-        local self = (super-type.__typecall cls)
-        'resize self.mmem ('capacity self.mmem)
+        local mmem = (MappedMemoryT)
+        'resize mmem ('capacity mmem)
         # set power up state
-        self.RS = 0xFD
-        # FIXME: this is very likely incorrect, I
-        # just set it to point to start of PRG ROM.
-        self.PC = 0x8000
-        self.RP = 0x24
-        # starts at 7 because of some init work the cpu does
-        self.cycles = 7
-        deref self
+        super-type.__typecall cls
+            RS = 0xFD
+            # FIXME: this is very likely incorrect, I
+            # just set it to point to start of PRG ROM.
+            PC = 0x8000
+            RP = 0x24
+            # starts at 7 because of some init work the cpu does
+            cycles = 7
+            mmem = mmem
 
     inline... set-flag (self, flag : StatusFlag, v : bool)
         let flag-bit = (flag as u8)
