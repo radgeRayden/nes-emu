@@ -1,5 +1,36 @@
 using import Array
 
+fn get-instruction-length (addrmode)
+    switch addrmode
+    case 'implicit
+        1
+    case 'accumulator
+        1
+    case 'immediate
+        2
+    case 'zero-page
+        2
+    case 'zero-pageX
+        2
+    case 'zero-pageY
+        2
+    case 'relative
+        2
+    case 'absolute
+        3
+    case 'absoluteX
+        3
+    case 'absoluteY
+        3
+    case 'indirect
+        3
+    case 'indirectX
+        2
+    case 'indirectY
+        2
+    default
+        unreachable;
+
 fn... fmt-hex (i, color? = true)
     width := (sizeof i) * 2
     representation := (hex i)
@@ -43,5 +74,5 @@ inline separateLE (v16)
     _ (v16 as u8) ((v16 >> 8) as u8)
 
 do
-    let fmt-hex read-whole-file joinLE separateLE
+    let fmt-hex read-whole-file joinLE separateLE get-instruction-length
     locals;

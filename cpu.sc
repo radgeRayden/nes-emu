@@ -3,17 +3,31 @@ using import enum
 using import Array
 
 using import .helpers
+using import .nes-common
+using import .6502-instruction-set
 
-enum StatusFlag plain
-    Negative = 7
-    Overflow = 6
-    Break = 4
-    Decimal = 3
-    InterruptDisable = 2
-    Zero = 1
-    Carry = 0
+spice fill-instruction-table (table scope)
+    inline append (i v)
+        spice-quote
+            table @ [i] =
+                typeinit
+                    byte = [i]
+                    mnemonic = v.mnemonic
+                    addrmode = v.addrmode
+                    fun =
+                        fn (cpu lo hi)
+                            v.fun cpu lo hi
 
-typedef MemoryAddress <: u16
+    let expr = (sc_expression_new)
+    for k v in (scope as Scope)
+        sc_expression_append expr (append ('@ (v as Scope) 'byte) v)
+    expr
+
+run-stage;
+
+fn NYI (cpu lo hi)
+    print "this opcode is illegal or not yet implemented:" (hex (cpu.mmem @ (cpu.PC - 1)))
+    ;
 
 struct CPUState
     # registers
@@ -28,11 +42,40 @@ struct CPUState
     let MappedMemoryT = (Array u8 AddressableMemorySize)
     mmem : MappedMemoryT
 
+    let cpuT = this-type
+    let InstructionT =
+        struct Instruction plain
+            byte     : u8
+            mnemonic : string = "NYI"
+            addrmode : Symbol = 'implicit
+            fun      : (pointer (function void (viewof (mutable@ cpuT) 1) u8 u8))
+
+            fn execute (self cpu lo hi)
+                self.fun &cpu lo hi
+
+            fn length (self)
+                get-instruction-length self.addrmode
+    unlet cpuT
+
+    itable : (Array InstructionT 256)
+
     cycles : u64
 
     inline __typecall (cls)
         local mmem = (MappedMemoryT)
         'resize mmem ('capacity mmem)
+
+        # in a function to avoid trashing callee with instructions
+        fn gen-itable ()
+            local itable : (Array InstructionT 256)
+            'resize itable ('capacity itable)
+            fill-instruction-table itable NES6502
+            for i in (range (countof itable))
+                ins := itable @ i
+                if (ins.fun == null)
+                    ins.fun = NYI
+            itable
+
         # set power up state
         super-type.__typecall cls
             RS = 0xFD
@@ -43,6 +86,7 @@ struct CPUState
             # starts at 7 because of some init work the cpu does
             cycles = 7
             mmem = mmem
+            itable = (gen-itable)
 
     inline... set-flag (self, flag : StatusFlag, v : bool)
         let flag-bit = (flag as u8)
@@ -89,7 +133,7 @@ struct CPUState
         default
             static-error "must always pull one or two bytes from the stack"
 
-    fn next (self optable)
+    fn next (self)
         pc := self.PC
         # NOTE: we don't do range checking here because pc is
         # only 16-bits wide, which gets us the desired behaviour of
@@ -97,10 +141,10 @@ struct CPUState
         op := self.mmem @ pc
         lo := self.mmem @ (pc + 1)
         hi := self.mmem @ (pc + 2)
-        instruction := optable @ op
+        instruction := self.itable @ op
+        pc += ((get-instruction-length instruction.addrmode) as u16)
         'execute instruction self lo hi
         ;
-
 
 do
     let CPUState StatusFlag MemoryAddress

@@ -4,7 +4,6 @@ using import Option
 using import struct
 
 using import .cpu
-import .opcodes
 using import .helpers
 
 struct RegisterSnapshot
@@ -20,7 +19,7 @@ struct RegisterSnapshot
     operand-low  : (Option u8)
     operand-high : (Option u8)
 
-    cycles : u64
+    # cycles : u64
 
     inline __== (lhsT rhsT)
         static-if (lhsT == rhsT)
@@ -57,7 +56,7 @@ struct RegisterSnapshot
                         sc_default_styler 'style-string str
                         sc_default_styler 'style-comment str
 
-        f"${PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}  ${flags} CYC:${s.cycles}"
+        f"${PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}  ${flags} "
 
 fn parse-log (path)
     using stdio
@@ -68,7 +67,6 @@ fn parse-log (path)
     fseek fhandle 0 SEEK_END
     let flen = (ftell fhandle)
     fseek fhandle 0 SEEK_SET
-
     local logged-state : (Array RegisterSnapshot)
     loop ()
         local line : (array i8 128)
@@ -109,7 +107,7 @@ fn parse-log (path)
                 &snap.SP
         assert (ins-byte-count == 5)
 
-        assert (sscanf (reftoptr (line @ 90)) "%llu" &snap.cycles)
+        # assert (sscanf (reftoptr (line @ 90)) "%llu" &snap.cycles)
 
         'append logged-state snap
         ;
@@ -118,7 +116,7 @@ fn parse-log (path)
     deref logged-state
 
 fn take-register-snapshot (cpu)
-    let op = (opcodes.itable @ (cpu.mmem @ cpu.PC))
+    let op = (cpu.itable @ (cpu.mmem @ cpu.PC))
     let optT = (Option u8)
     # next two bytes after opcode
     let b1 b2 = (cpu.mmem @ (cpu.PC + 1)) (cpu.mmem @ (cpu.PC + 2))
@@ -145,7 +143,7 @@ fn take-register-snapshot (cpu)
         mnemonic = mnemonic
         operand-low = lo
         operand-high = hi
-        cycles = cpu.cycles
+        # cycles = cpu.cycles
 
 fn dump-memory (cpu path)
     using stdio
@@ -200,7 +198,7 @@ state.PC = 0xC000
 LOG_EVERY_INSTRUCTION := false
 
 fn log-instruction (snap line)
-    let mode = (tostring ((opcodes.itable @ snap.opcode) . addrmode))
+    let mode = (tostring ((state.itable @ snap.opcode) . addrmode))
     print snap "\t" mode "\t" line
 
 for i entry in (enumerate log-snapshots)
@@ -219,7 +217,7 @@ for i entry in (enumerate log-snapshots)
         f""""
              entry ${i + 1} didn't match CPU state, log says:
              ${entry}
-    'next state opcodes.itable
+    'next state
     ;
 
 print "Validation succesful!"
