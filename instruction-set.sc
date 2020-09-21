@@ -1,5 +1,12 @@
 sugar instruction-set (name body...)
-    fn gen-opcode-entry (mnemonic opcode addr-router body)
+    let header rest =
+        sugar-match body...
+        case (('with-header header...) rest...)
+            _ (header... as list) rest...
+        default
+            error "!"
+
+    inline gen-opcode-entry (mnemonic opcode addr-router body)
         mnemonic as:= Symbol
         let entry-name = (Symbol ((tostring mnemonic) .. "0x" .. (hex (opcode as i32))))
         qq
@@ -8,11 +15,20 @@ sugar instruction-set (name body...)
                     # some metadata about the instruction
                     [let] byte = [opcode]
                     [let] mnemonic = [(tostring mnemonic)]
-                    [let] addrmode = (sugar-quote [addr-router])
+                    [let] addrmode = ([sugar-quote] [addr-router])
+                    [inline] fun (cpu lo hi)
+                        [let] cpu = ([ptrtoref] cpu)
+
+                        unquote-splice header
+
+                        [let] operand = ([addr-router] cpu lo hi)
+                        [unlet] cpu lo hi
+
+                        unquote-splice body
                     [locals];
 
     let instructions =
-        loop (result rest = '() (body... as list))
+        loop (result rest = '() rest)
             if (empty? rest)
                 break result
 

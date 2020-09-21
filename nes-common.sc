@@ -13,20 +13,6 @@ enum StatusFlag plain
 
 typedef MemoryAddress <: u16
 
-struct CPUState
-    # registers
-    RA : u8  # accumulator
-    RX : u8
-    RY : u8
-    PC : MemoryAddress # program counter
-    RS : u8  # stack pointer
-    RP : u8  # status
-
-    let AddressableMemorySize = (0xFFFF + 1)
-    mmem : (Array u8 AddressableMemorySize)
-
-    cycles : u64
-
 do
-    let StatusFlag MemoryAddress CPUState
+    let StatusFlag MemoryAddress
     locals;

@@ -90,6 +90,31 @@ inline indirectY (cpu lo hi)
     AbsoluteOperand ((joinLE rl rh) + cpu.RY) cpu
 
 instruction-set NES6502
+    with-header
+        inline fset? (...)
+            'flag-set? cpu ...
+        inline fset (...)
+            'set-flag cpu ...
+        inline push-stack (...)
+            'push-stack cpu ...
+        inline pull-stack (...)
+            'pull-stack cpu ...
+
+        let acc = cpu.RA
+        let rx  = cpu.RX
+        let ry  = cpu.RY
+        let pc  = cpu.PC
+        let sp  = cpu.RS
+        let rp  = cpu.RP
+
+        let NF = StatusFlag.Negative
+        let VF = StatusFlag.Overflow
+        let BF = StatusFlag.Break
+        let DF = StatusFlag.Decimal
+        let IF = StatusFlag.InterruptDisable
+        let ZF = StatusFlag.Zero
+        let CF = StatusFlag.Carry
+
     # Add with Carry
     instruction ADC
         0x69 -> immediate
@@ -781,7 +806,6 @@ instruction-set NES6502
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
 
-print NES6502
-for i k v in (enumerate NES6502)
-    print ('@ (v as Scope) 'mnemonic)
-locals;
+do
+    let NES6502
+    locals;
