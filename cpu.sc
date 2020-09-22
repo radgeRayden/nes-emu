@@ -34,7 +34,7 @@ struct CPUState
     RA : u8  # accumulator
     RX : u8
     RY : u8
-    PC : MemoryAddress # program counter
+    PC : ProgramCounter # program counter
     RS : u8  # stack pointer
     RP : u8  # status
 
@@ -149,5 +149,5 @@ struct CPUState
         ;
 
 do
-    let CPUState StatusFlag MemoryAddress
+    let CPUState StatusFlag
     locals;

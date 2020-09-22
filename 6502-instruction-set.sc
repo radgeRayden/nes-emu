@@ -29,9 +29,9 @@ struct AbsoluteOperand
                 lhs.mmemptr @ lhs.addr = (rhs as u8)
 
     inline __imply (lhsT rhsT)
-        static-if (rhsT == MemoryAddress)
+        static-if (rhsT == ProgramCounter)
             inline (self)
-                self.addr as MemoryAddress
+                self.addr as ProgramCounter
         elseif (imply? u8 rhsT)
             inline (self)
                 imply (self.mmemptr @ self.addr) rhsT

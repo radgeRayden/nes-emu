@@ -11,8 +11,8 @@ enum StatusFlag plain
     Zero = 1
     Carry = 0
 
-typedef MemoryAddress <: u16
+typedef ProgramCounter <: u16
 
 do
-    let StatusFlag MemoryAddress
+    let StatusFlag ProgramCounter
     locals;
