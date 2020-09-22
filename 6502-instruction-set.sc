@@ -97,8 +97,17 @@ inline absolute (cpu lo hi)
 inline absoluteX (cpu lo hi)
     AbsoluteOperand ((joinLE lo hi) + cpu.RX) cpu
 
-inline absoluteY (cpu lo hi)
-    AbsoluteOperand ((joinLE lo hi) + cpu.RY) cpu
+inline absoluteY (cpu lo hi write?)
+    real-addr := (joinLE lo hi) + cpu.RY
+    cpu.cycles += 1
+    static-if write?
+        # while writing, we always spend a cycle to correct hi
+        cpu.cycles += 1
+    else
+        # did we cross a page?
+        if (((real-addr & 0xff00) >> 8) != hi)
+            cpu.cycles += 1
+    AbsoluteOperand real-addr cpu
 
 inline indirect (cpu lo hi)
     # http://obelisk.me.uk/6502/reference.html#JMP
@@ -133,7 +142,6 @@ inline indirectY (cpu lo hi write?)
     else
         # did we cross a page?
         if (((real-addr & 0xff00) >> 8) != rh)
-            report "crossed!"
             cpu.cycles += 1
     MemoryOperand real-addr cpu
 
@@ -829,7 +837,7 @@ instruction-set NES6502
         0x95 -> zero-pageX
         0x8D -> absolute
         0x9D -> absoluteX
-        0x99 -> absoluteY
+        0x99 -> absoluteY true
         0x81 -> indirectX
         0x91 -> indirectY true
     execute
