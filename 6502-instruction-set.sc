@@ -193,6 +193,7 @@ instruction-set NES6502
     execute
         if (not (fset? CF))
             pc += operand
+            cycles += 1
 
     # Branch if Carry Set
     instruction BCS
@@ -200,6 +201,7 @@ instruction-set NES6502
     execute
         if (fset? CF)
             pc += operand
+            cycles += 1
 
     # Branch if Equal
     instruction BEQ
@@ -207,12 +209,14 @@ instruction-set NES6502
     execute
         if (fset? ZF)
             pc += operand
+            cycles += 1
 
     # Bit Test
     instruction BIT
         0x24 -> zero-page
         0x2C -> absolute
     execute
+        operand := (imply operand u8)
         fset ZF (not (acc & operand))
         fset NF (operand & 0x80) # 7
         fset VF (operand & 0x40) # 6
@@ -230,12 +234,16 @@ instruction-set NES6502
     execute
         if (not (fset? ZF))
             pc += operand
+            cycles += 1
+
+
     # Branch if Positive
     instruction BPL
         0x10 -> relative
     execute
         if (not (fset? NF))
             pc += operand
+            cycles += 1
 
     # Branch if Overflow Clear
     instruction BVC
@@ -243,6 +251,7 @@ instruction-set NES6502
     execute
         if (not (fset? VF))
             pc += operand
+            cycles += 1
 
     # Branch if Overflow Set
     instruction BVS
@@ -250,6 +259,7 @@ instruction-set NES6502
     execute
         if (fset? VF)
             pc += operand
+            cycles += 1
 
     # Clear Carry Flag
     instruction CLC
@@ -428,6 +438,7 @@ instruction-set NES6502
         0x20 -> absolute
     execute
         push-stack (pc - 1)
+        cycles += 3
         pc = operand
 
     # Load A and X simultaneously
@@ -546,6 +557,8 @@ instruction-set NES6502
         0x48 -> implicit
     execute
         push-stack acc
+        # push register, decrement S
+        cycles += 1
 
     # Push Processor Status
     instruction PHP
@@ -554,12 +567,16 @@ instruction-set NES6502
         # http://wiki.nesdev.com/w/index.php/Status_flags
         # See "The B Flag"
         push-stack (rp | 0x30)
+        # push register, decrement S
+        cycles += 1
 
     # Pull Accumulator
     instruction PLA
         0x68 -> implicit
     execute
         acc = (pull-stack 1)
+        # +2 for stack manipulation
+        cycles += 2
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
 
@@ -570,6 +587,8 @@ instruction-set NES6502
         # bits 4 and 5 have to remain the same
         mask := (rp & 0x30:u8)
         svalue := (pull-stack 1)
+        # +2 for stack manipulation
+        cycles += 2
         rp = ((svalue & (~ 0x30:u8)) | mask)
         ;
 
@@ -661,12 +680,20 @@ instruction-set NES6502
         svalue := (pull-stack 1)
         rp = ((svalue & (~ 0x30:u8)) | mask)
         pc = (pull-stack 2)
+        # 3  $0100,S  R  increment S
+        # 4  $0100,S  R  pull P from stack, increment S
+        # 5  $0100,S  R  pull PCL from stack, increment S
+        # 6  $0100,S  R  pull PCH from stack
+        cycles += 4
 
     # Return from Subroutine
     instruction RTS
         0x60 -> implicit
     execute
         pc = ((pull-stack 2) + 1)
+        # +3 for stack manipulation
+        # +1 for incrementing PC
+        cycles += 4
 
     # Store A & X
     # this instruction is undocumented
