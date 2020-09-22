@@ -59,6 +59,95 @@ struct RegisterSnapshot
 
         f"${PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}  ${flags} CYC:${cyc}"
 
+    fn display-diff (ours theirs)
+        # we have to duplicate the repr code to be able to use different colors :(
+        using import radlib.stringtools
+        inline highlight (str correct?)
+            if (not correct?)
+                sc_default_styler 'style-error str
+            else
+                str
+
+        let PC-match? = (ours.PC == theirs.PC)
+        let PC =
+            highlight (fmt-hex ours.PC PC-match?) PC-match?
+
+        let mnemonic-match? = (ours.mnemonic == theirs.mnemonic)
+        let mnemonic =
+            do
+                local s = ours.mnemonic
+                highlight (string &s 3) mnemonic-match?
+
+        let op-match? = (ours.opcode == theirs.opcode)
+        let op =
+            highlight (hex ours.opcode) op-match?
+
+        let lo-match? = (ours.operand-low == theirs.operand-low)
+        let lo =
+            if lo-match?
+                try
+                    fmt-hex ('unwrap ours.operand-low)
+                else
+                    "  "
+            else
+                try (highlight (fmt-hex ('unwrap ours.operand-low) false) false)
+                else (highlight "■■" false)
+
+        let hi-match? = (ours.operand-high == theirs.operand-high)
+        let hi =
+            if hi-match?
+                try
+                    fmt-hex ('unwrap ours.operand-high)
+                else
+                    "  "
+            else
+                try (highlight (fmt-hex ('unwrap ours.operand-high) false) false)
+                else (highlight "■■" false)
+
+        let A X Y P SP =
+            va-map
+                inline (k)
+                    let attr = (getattr ours k)
+                    let other-attr = (getattr theirs k)
+                    let attr-match? = (attr == other-attr)
+                    highlight (fmt-hex attr attr-match?) attr-match?
+                _ 'A 'X 'Y 'P 'SP
+
+        let cyc-match? = (ours.cycles == theirs.cycles)
+        let cyc =
+            if cyc-match?
+                sc_default_styler 'style-number (tostring ours.cycles)
+            else
+                highlight (tostring ours.cycles) false
+
+        let flags =
+            fold (result = "") for i c in (enumerate "NV54DIZC")
+                local c = c
+                let str = (string &c 1)
+                Abit-set? := (ours.P & (1 << (7 - i)))
+                Bbit-set? := (theirs.P & (1 << (7 - i)))
+                .. result
+                    if Abit-set?
+                        if Bbit-set?
+                            sc_default_styler 'style-string str
+                        else
+                            sc_default_styler 'style-error str
+                    else
+                        if (not Bbit-set?)
+                            sc_default_styler 'style-comment "-"
+                        else
+                            sc_default_styler 'style-error "-"
+
+        let Astr =
+            ..
+                f"${PC}  ${mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} "
+                f"Y:${Y} P:${P} SP:${SP}  ${flags} CYC:${cyc}"
+        io-write! (sc_default_styler 'style-error "<<< ")
+        print Astr
+
+        io-write! (sc_default_styler 'style-string ">>> ")
+        print theirs
+
 fn parse-log (path)
     using stdio
     using _string
@@ -212,12 +301,12 @@ for i entry in (enumerate log-snapshots)
 
     equal? := entry == current
     if (not equal?) (dump-memory state "nestest.dump")
+        print "----------------------------------------------------------------------------------"
+        RegisterSnapshot.display-diff current entry
         static-if (not LOG_EVERY_INSTRUCTION)
             log-instruction current (i + 1)
     test equal?
-        f""""
-             entry ${i + 1} didn't match CPU state, log says:
-             ${entry}
+        f"entry ${i + 1} didn't match CPU state!"
     'next state
     ;
 
