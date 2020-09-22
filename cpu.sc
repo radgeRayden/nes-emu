@@ -31,12 +31,12 @@ fn NYI (cpu lo hi)
 
 struct CPUState
     # registers
-    RA : u8  # accumulator
-    RX : u8
-    RY : u8
+    RA : ByteRegister  # accumulator
+    RX : ByteRegister
+    RY : ByteRegister
     PC : ProgramCounter # program counter
-    RS : u8  # stack pointer
-    RP : u8  # status
+    RS : ByteRegister  # stack pointer
+    RP : ByteRegister  # status
 
     let AddressableMemorySize = (0xFFFF + 1)
     let MappedMemoryT = (Array u8 AddressableMemorySize)

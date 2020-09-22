@@ -21,23 +21,30 @@ struct AbsoluteOperand plain
     inline __typecall (cls addr cpu)
         super-type.__typecall cls
             addr = addr
-            mmemptr = cpu.mmem._items
+            mmemptr = (reftoptr (cpu.mmem._items @ addr))
             clock = &cpu.cycles
 
     inline __= (lhsT rhsT)
         static-if (rhsT < integer)
             inline (lhs rhs)
                 @lhs.clock += 1
-                lhs.mmemptr @ lhs.addr = (rhs as u8)
+                @lhs.mmemptr = (rhs as u8)
 
     inline __imply (lhsT rhsT)
         static-if (rhsT == ProgramCounter)
             inline (self)
                 self.addr as ProgramCounter
-        elseif (imply? u8 rhsT)
+        elseif (rhsT < integer)
             inline (self)
-                @self.clock += 1
-                imply (self.mmemptr @ self.addr) rhsT
+                imply (deref @self.mmemptr) rhsT
+
+    inline __toref (self)
+        @self.clock += 1
+        imply @self.mmemptr u8
+
+typedef ConstantOperand <: u8
+    inline __toref (self)
+        deref self
 
 struct MemoryOperand plain
     clockptr : (mutable@ u64)
@@ -55,8 +62,11 @@ struct MemoryOperand plain
     inline __imply (clsT otherT)
         static-if (otherT < integer)
             inline (self)
-                (ptrtoref self.clockptr) += 1
                 imply (deref @self.memptr) otherT
+
+    inline __toref (self)
+        (ptrtoref self.clockptr) += 1
+        imply (deref @self.memptr) u8
 
 inline implicit (cpu lo hi)
     ;
@@ -65,16 +75,16 @@ inline accumulator (cpu lo hi)
     cpu.RA
 
 inline immediate (cpu lo hi)
-    lo
+    ConstantOperand lo
 
 inline zero-page (cpu lo hi)
     MemoryOperand (joinLE lo 0x00) cpu
 
 inline zero-pageX (cpu lo hi)
-    cpu.mmem @ (joinLE (lo + cpu.RX) 0x00)
+    MemoryOperand (joinLE (lo + cpu.RX) 0x00) cpu
 
 inline zero-pageY (cpu lo hi)
-    cpu.mmem @ (joinLE (lo + cpu.RY) 0x00)
+    MemoryOperand (joinLE (lo + cpu.RY) 0x00) cpu
 
 inline relative (cpu lo hi)
     lo as i8
@@ -106,12 +116,21 @@ inline indirect (cpu lo hi)
 inline indirectX (cpu lo hi)
     iaddr := (joinLE (lo + cpu.RX) 0x00) as u8 # ensure wrap around
     let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
-    AbsoluteOperand (joinLE rl rh) cpu
+    # 3    pointer    R  read from the address, add X to it
+    # 4   pointer+X   R  fetch effective address low
+    # 5  pointer+X+1  R  fetch effective address high
+    cpu.cycles += 3
+    MemoryOperand (joinLE rl rh) cpu
 
 inline indirectY (cpu lo hi)
     iaddr := ((joinLE lo 0x00) as u8)
     let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
-    AbsoluteOperand ((joinLE rl rh) + cpu.RY) cpu
+    real-addr := (joinLE rl rh) + cpu.RY
+    cpu.cycles += 2
+    # did we cross a page?
+    if (((real-addr & 0xff00) >> 8) != rh)
+        cpu.cycles += 1
+    MemoryOperand real-addr cpu
 
 instruction-set NES6502
     with-header
@@ -151,6 +170,8 @@ instruction-set NES6502
         0x61 -> indirectX
         0x71 -> indirectY
     execute
+        # fetch
+        operand := @operand
         carry  := (? (fset? CF) 1:u8 0:u8)
         result := acc + operand + carry
         fset VF (((acc ^ result) & (operand ^ result)) & 0x80)
@@ -170,7 +191,7 @@ instruction-set NES6502
         0x21 -> indirectX
         0x31 -> indirectY
     execute
-        acc &= operand
+        acc &= @operand
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
 
@@ -182,7 +203,9 @@ instruction-set NES6502
         0x0E -> absolute
         0x1E -> absoluteX
     execute
-        fset CF (operand & 0x80)
+        value := @operand
+        fset CF (value & 0x80)
+        @operand
         operand <<= 1
         fset ZF (operand == 0)
         fset NF (operand & 0x80)
@@ -216,7 +239,7 @@ instruction-set NES6502
         0x24 -> zero-page
         0x2C -> absolute
     execute
-        operand := (imply operand u8)
+        operand := @operand
         fset ZF (not (acc & operand))
         fset NF (operand & 0x80) # 7
         fset VF (operand & 0x40) # 6
@@ -227,6 +250,7 @@ instruction-set NES6502
     execute
         if (fset? NF)
             pc += operand
+            cycles += 1
 
     # Branch if Not Equal
     instruction BNE
@@ -290,6 +314,8 @@ instruction-set NES6502
         0xC1 -> indirectX
         0xD1 -> indirectY
     execute
+        # fetch
+        operand := @operand
         fset CF (acc >= operand)
         fset ZF (acc == operand)
         fset NF ((acc - operand) & 0x80)
@@ -300,6 +326,8 @@ instruction-set NES6502
         0xE4 -> zero-page
         0xEC -> absolute
     execute
+        # fetch
+        operand := @operand
         fset CF (rx >= operand)
         fset ZF (rx == operand)
         fset NF ((rx - operand) & 0x80)
@@ -310,6 +338,8 @@ instruction-set NES6502
         0xC4 -> zero-page
         0xCC -> absolute
     execute
+        # fetch
+        operand := @operand
         fset CF (ry >= operand)
         fset ZF (ry == operand)
         fset NF ((ry - operand) & 0x80)
@@ -337,6 +367,7 @@ instruction-set NES6502
         0xCE -> absolute
         0xDE -> absoluteX
     execute
+        operand = @operand
         operand -= 1
         fset ZF (operand == 0)
         fset NF (operand & 0x80)
@@ -368,7 +399,7 @@ instruction-set NES6502
         0x41 -> indirectX
         0x51 -> indirectY
     execute
-        acc ^= operand
+        acc ^= @operand
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
 
@@ -379,6 +410,7 @@ instruction-set NES6502
         0xEE -> absolute
         0xFE -> absoluteX
     execute
+        operand = @operand
         operand += 1
         fset ZF (operand == 0)
         fset NF (operand & 0x80)
@@ -412,7 +444,7 @@ instruction-set NES6502
     execute
         operand += 1
         carry := (? (fset? CF) 1:u8 0:u8)
-        twos  := (~ (imply operand u8)) + 1:u8
+        twos  := (~ @operand) + 1:u8
         old   := (deref acc)
         oldp? := old < 128
 
@@ -467,7 +499,7 @@ instruction-set NES6502
         0xA1 -> indirectX
         0xB1 -> indirectY
     execute
-        acc = operand
+        acc = @operand
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
 
@@ -479,7 +511,7 @@ instruction-set NES6502
         0xAE -> absolute
         0xBE -> absoluteY
     execute
-        rx = operand
+        rx = @operand
         fset ZF (rx == 0)
         fset NF (rx & 0x80)
 
@@ -491,7 +523,7 @@ instruction-set NES6502
         0xAC -> absolute
         0xBC -> absoluteX
     execute
-        ry = operand
+        ry = @operand
         fset ZF (ry == 0)
         fset NF (ry & 0x80)
 
@@ -504,6 +536,7 @@ instruction-set NES6502
         0x5E -> absoluteX
     execute
         fset CF (operand & 0x1)
+        operand = @operand
         operand >>= 1
         fset ZF (operand == 0)
         fset NF (operand & 0x80)
@@ -548,7 +581,7 @@ instruction-set NES6502
         0x01 -> indirectX
         0x11 -> indirectY
     execute
-        acc |= operand
+        acc |= @operand
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
 
@@ -620,7 +653,7 @@ instruction-set NES6502
         0x3E -> absoluteX
     execute
         let carry = (? (fset? CF) 1:u8 0:u8)
-        fset CF (operand & 0x80)
+        fset CF (@operand & 0x80)
         operand <<= 1
         operand |= carry
         fset ZF (operand == 0)
@@ -635,7 +668,8 @@ instruction-set NES6502
         0x7E -> absoluteX
     execute
         let carry = (? (fset? CF) 1:u8 0:u8)
-        bit0 := (operand & 0x01)
+        value := @operand
+        bit0 := (value & 0x01)
         operand >>= 1
         operand |= (carry << 7)
         fset CF bit0
@@ -721,7 +755,7 @@ instruction-set NES6502
         # One of them is certainly wrong, and I think it's this one (possibly both,
         # in different ways).
         carry := (? (fset? CF) 1:u8 0:u8)
-        twos  := (~ (imply operand u8)) + 1:u8
+        twos  := (~ @operand) + 1:u8
         old   := (deref acc)
         oldp? := old < 128
 

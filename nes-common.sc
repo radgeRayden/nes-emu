@@ -12,7 +12,10 @@ enum StatusFlag plain
     Carry = 0
 
 typedef ProgramCounter <: u16
+typedef ByteRegister <: u8
+    inline __toref (self)
+        deref self
 
 do
-    let StatusFlag ProgramCounter
+    let StatusFlag ProgramCounter ByteRegister
     locals;
