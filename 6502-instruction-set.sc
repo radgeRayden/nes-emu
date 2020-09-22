@@ -68,6 +68,11 @@ struct MemoryOperand plain
         (ptrtoref self.clockptr) += 1
         imply (deref @self.memptr) u8
 
+inline page-crossed? (prev next)
+    oh := prev >> 8
+    nh := next >> 8
+    oh != nh
+
 inline implicit (cpu lo hi)
     ;
 
@@ -81,9 +86,11 @@ inline zero-page (cpu lo hi)
     MemoryOperand (joinLE lo 0x00) cpu
 
 inline zero-pageX (cpu lo hi)
+    cpu.cycles += 1
     MemoryOperand (joinLE (lo + cpu.RX) 0x00) cpu
 
 inline zero-pageY (cpu lo hi)
+    cpu.cycles += 1
     MemoryOperand (joinLE (lo + cpu.RY) 0x00) cpu
 
 inline relative (cpu lo hi)
@@ -94,7 +101,16 @@ inline absolute (cpu lo hi)
     cpu.cycles += 1
     AbsoluteOperand (joinLE lo hi) cpu
 
-inline absoluteX (cpu lo hi)
+inline absoluteX (cpu lo hi write?)
+    real-addr := (joinLE lo hi) + cpu.RX
+    cpu.cycles += 1
+    static-if write?
+        # while writing, we always spend a cycle to correct hi
+        cpu.cycles += 1
+    else
+        # did we cross a page?
+        if (((real-addr & 0xff00) >> 8) != hi)
+            cpu.cycles += 1
     AbsoluteOperand ((joinLE lo hi) + cpu.RX) cpu
 
 inline absoluteY (cpu lo hi write?)
@@ -146,6 +162,7 @@ inline indirectY (cpu lo hi write?)
         if (((real-addr & 0xff00) >> 8) != rh)
             cpu.cycles += 1
     MemoryOperand real-addr cpu
+
 
 instruction-set NES6502
     with-header
@@ -216,7 +233,7 @@ instruction-set NES6502
         0x06 -> zero-page
         0x16 -> zero-pageX
         0x0E -> absolute
-        0x1E -> absoluteX
+        0x1E -> absoluteX true
     execute
         value := @operand
         fset CF (value & 0x80)
@@ -246,6 +263,9 @@ instruction-set NES6502
         0xF0 -> relative
     execute
         if (fset? ZF)
+            next := pc + operand
+            if (page-crossed? pc next)
+                cycles += 1
             pc += operand
             cycles += 1
 
@@ -370,6 +390,8 @@ instruction-set NES6502
         0xDB -> absoluteY
         0xDF -> absoluteX
     execute
+        # RMW quirk
+        operand = @operand
         operand -= 1
         fset CF (acc >= operand)
         fset ZF (acc == operand)
@@ -380,7 +402,7 @@ instruction-set NES6502
         0xC6 -> zero-page
         0xD6 -> zero-pageX
         0xCE -> absolute
-        0xDE -> absoluteX
+        0xDE -> absoluteX true
     execute
         operand = @operand
         operand -= 1
@@ -423,7 +445,7 @@ instruction-set NES6502
         0xE6 -> zero-page
         0xF6 -> zero-pageX
         0xEE -> absolute
-        0xFE -> absoluteX
+        0xFE -> absoluteX true
     execute
         operand = @operand
         operand += 1
@@ -457,9 +479,11 @@ instruction-set NES6502
         0xFB -> absoluteY
         0xFF -> absoluteX
     execute
+        # RMW quirk
+        operand = @operand
         operand += 1
         carry := (? (fset? CF) 1:u8 0:u8)
-        twos  := (~ @operand) + 1:u8
+        twos  := (~ (imply operand u8)) + 1:u8
         old   := (deref acc)
         oldp? := old < 128
 
@@ -498,7 +522,7 @@ instruction-set NES6502
         0xB7 -> zero-pageY
         0xBF -> absoluteY
     execute
-        acc = operand
+        acc = @operand
         rx = acc
         fset ZF (rx == 0)
         fset NF (rx & 0x80)
@@ -548,7 +572,7 @@ instruction-set NES6502
         0x46 -> zero-page
         0x56 -> zero-pageX
         0x4E -> absolute
-        0x5E -> absoluteX
+        0x5E -> absoluteX true
     execute
         fset CF (operand & 0x1)
         operand = @operand
@@ -583,6 +607,9 @@ instruction-set NES6502
         0xDC -> absoluteX # undocumented
         0xFC -> absoluteX # undocumented
     execute
+        static-if (not (none? operand))
+            # dummy read!
+            @operand
         ;
 
     # Logical Inclusive OR
@@ -653,8 +680,9 @@ instruction-set NES6502
     execute
         let carry = (? (fset? CF) 1:u8 0:u8)
         fset CF (operand & 0x80)
-        operand <<= 1
-        operand |= carry
+        # RMW quirk
+        operand = @operand
+        operand = ((operand << 1) | carry)
         acc &= operand
         fset ZF (acc == 0)
         fset NF (acc & 0x80)
@@ -665,7 +693,7 @@ instruction-set NES6502
         0x26 -> zero-page
         0x36 -> zero-pageX
         0x2E -> absolute
-        0x3E -> absoluteX
+        0x3E -> absoluteX true
     execute
         let carry = (? (fset? CF) 1:u8 0:u8)
         fset CF (@operand & 0x80)
@@ -680,7 +708,7 @@ instruction-set NES6502
         0x66 -> zero-page
         0x76 -> zero-pageX
         0x6E -> absolute
-        0x7E -> absoluteX
+        0x7E -> absoluteX true
     execute
         let carry = (? (fset? CF) 1:u8 0:u8)
         value := @operand
@@ -702,6 +730,7 @@ instruction-set NES6502
         0x7B -> absoluteY
         0x7F -> absoluteX
     execute
+
         # ROR
         let carry = (? (fset? CF) 1:u8 0:u8)
         bit0 := (operand & 0x01)
@@ -810,6 +839,8 @@ instruction-set NES6502
         0x1B -> absoluteY
         0x1F -> absoluteX
     execute
+        # RMW quirk
+        operand = @operand
         fset CF (operand & 0x80)
         operand <<= 1
         acc |= operand
@@ -828,6 +859,8 @@ instruction-set NES6502
         0x5F -> absoluteX
     execute
         fset CF (operand & 0x1)
+        # RMW quirk
+        operand = @operand
         operand >>= 1
         acc ^= operand
         fset ZF (acc == 0)
@@ -838,7 +871,7 @@ instruction-set NES6502
         0x85 -> zero-page
         0x95 -> zero-pageX
         0x8D -> absolute
-        0x9D -> absoluteX
+        0x9D -> absoluteX true
         0x99 -> absoluteY true
         0x81 -> indirectX
         0x91 -> indirectY true
