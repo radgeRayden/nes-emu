@@ -122,14 +122,19 @@ inline indirectX (cpu lo hi)
     cpu.cycles += 3
     MemoryOperand (joinLE rl rh) cpu
 
-inline indirectY (cpu lo hi)
+inline indirectY (cpu lo hi write?)
     iaddr := ((joinLE lo 0x00) as u8)
     let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
     real-addr := (joinLE rl rh) + cpu.RY
     cpu.cycles += 2
-    # did we cross a page?
-    if (((real-addr & 0xff00) >> 8) != rh)
+    static-if write?
+        # while writing, we always spend a cycle to correct hi
         cpu.cycles += 1
+    else
+        # did we cross a page?
+        if (((real-addr & 0xff00) >> 8) != rh)
+            report "crossed!"
+            cpu.cycles += 1
     MemoryOperand real-addr cpu
 
 instruction-set NES6502
@@ -826,7 +831,7 @@ instruction-set NES6502
         0x9D -> absoluteX
         0x99 -> absoluteY
         0x81 -> indirectX
-        0x91 -> indirectY
+        0x91 -> indirectY true
     execute
         operand = acc
 
