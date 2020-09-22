@@ -6,7 +6,7 @@ sugar instruction-set (name body...)
         default
             error "!"
 
-    inline gen-opcode-entry (mnemonic opcode addr-router body)
+    inline gen-opcode-entry (mnemonic opcode addr-router body additional-args)
         mnemonic as:= Symbol
         let entry-name = (Symbol ((tostring mnemonic) .. "0x" .. (hex (opcode as i32))))
         qq
@@ -21,7 +21,9 @@ sugar instruction-set (name body...)
 
                         unquote-splice header
 
-                        [let] operand = ([addr-router] cpu lo hi)
+                        [let] operand =
+                            [addr-router] cpu lo hi
+                                unquote-splice additional-args
                         [unlet] cpu lo hi
 
                         unquote-splice body
@@ -40,7 +42,11 @@ sugar instruction-set (name body...)
                         sugar-match (opcode as list)
                         case (opcode '-> router)
                             cons
-                                gen-opcode-entry mnemonic opcode router body...
+                                gen-opcode-entry mnemonic opcode router body... '()
+                                opcodes
+                        case (opcode '-> router args...)
+                            cons
+                                gen-opcode-entry mnemonic opcode router body... args...
                                 opcodes
                         default
                             error "!"
