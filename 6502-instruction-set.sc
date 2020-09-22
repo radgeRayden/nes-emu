@@ -119,6 +119,8 @@ inline indirect (cpu lo hi)
     let rl rh =
         cpu.mmem @ iaddr
         cpu.mmem @ (? cross-page? (joinLE 0x00 hi) (iaddr + 1))
+    # only JMP uses this, so we can sorta hardcode how many cycles it takes
+    cpu.cycles += 3
     # return the location stored at this address
     AbsoluteOperand (joinLE rl rh) cpu
 
