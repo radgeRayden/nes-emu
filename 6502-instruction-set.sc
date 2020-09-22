@@ -14,18 +14,20 @@ using import .nes-common
     meant to survive past the instruction execution, so it _should_ never become stale. To get
     as much safety as we can in this situation we assert that the mmem has been resized
     so that the full 64Kb are addressable.
-struct AbsoluteOperand
+struct AbsoluteOperand plain
     addr    : u16
     mmemptr : (mutable@ u8)
+    clock : (mutable@ u64)
     inline __typecall (cls addr cpu)
-        # assert ((countof cpu.mmem) == CPUState.AddressableMemorySize)
         super-type.__typecall cls
             addr = addr
             mmemptr = cpu.mmem._items
+            clock = &cpu.cycles
 
     inline __= (lhsT rhsT)
         static-if (rhsT < integer)
             inline (lhs rhs)
+                @lhs.clock += 1
                 lhs.mmemptr @ lhs.addr = (rhs as u8)
 
     inline __imply (lhsT rhsT)
@@ -34,7 +36,27 @@ struct AbsoluteOperand
                 self.addr as ProgramCounter
         elseif (imply? u8 rhsT)
             inline (self)
+                @self.clock += 1
                 imply (self.mmemptr @ self.addr) rhsT
+
+struct MemoryOperand plain
+    clockptr : (mutable@ u64)
+    memptr   : (mutable@ u8)
+
+    inline __typecall (cls addr cpu)
+        super-type.__typecall cls
+            clockptr = &cpu.cycles
+            memptr = (reftoptr (cpu.mmem @ addr))
+    inline __= (clsT otherT)
+        inline (lhs rhs)
+            (ptrtoref lhs.clockptr) += 1
+            (ptrtoref lhs.memptr) = (rhs as u8)
+
+    inline __imply (clsT otherT)
+        static-if (otherT < integer)
+            inline (self)
+                (ptrtoref self.clockptr) += 1
+                imply (deref @self.memptr) otherT
 
 inline implicit (cpu lo hi)
     ;
@@ -46,7 +68,7 @@ inline immediate (cpu lo hi)
     lo
 
 inline zero-page (cpu lo hi)
-    cpu.mmem @ (joinLE lo 0x00)
+    MemoryOperand (joinLE lo 0x00) cpu
 
 inline zero-pageX (cpu lo hi)
     cpu.mmem @ (joinLE (lo + cpu.RX) 0x00)
@@ -79,7 +101,7 @@ inline indirect (cpu lo hi)
         cpu.mmem @ iaddr
         cpu.mmem @ (? cross-page? (joinLE 0x00 hi) (iaddr + 1))
     # return the location stored at this address
-    MemoryAddress (joinLE rl rh)
+    AbsoluteOperand (joinLE rl rh) cpu
 
 inline indirectX (cpu lo hi)
     iaddr := (joinLE (lo + cpu.RX) 0x00) as u8 # ensure wrap around
@@ -108,6 +130,7 @@ instruction-set NES6502
         let pc  = cpu.PC
         let sp  = cpu.RS
         let rp  = cpu.RP
+        let cycles = cpu.cycles
 
         let NF = StatusFlag.Negative
         let VF = StatusFlag.Overflow
