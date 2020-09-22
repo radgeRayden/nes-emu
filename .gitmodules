@@ -4,3 +4,6 @@
 [submodule "nes-test-roms"]
 	path = validation/nes-test-roms
 	url = https://github.com/christopherpow/nes-test-roms
+[submodule "sokol"]
+	path = sokol
+	url = https://github.com/floooh/sokol
