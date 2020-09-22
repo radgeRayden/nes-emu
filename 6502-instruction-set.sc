@@ -730,12 +730,12 @@ instruction-set NES6502
         0x7B -> absoluteY
         0x7F -> absoluteX
     execute
-
+        # RMW quirk
+        operand = @operand
         # ROR
         let carry = (? (fset? CF) 1:u8 0:u8)
         bit0 := (operand & 0x01)
-        operand >>= 1
-        operand |= (carry << 7)
+        operand = (operand >> 1) | (carry << 7)
         fset CF bit0
         fset ZF (operand == 0)
         fset NF (operand & 0x80)
