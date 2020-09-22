@@ -30,8 +30,8 @@ struct RegisterSnapshot
                         result and ((getattr l k) == (getattr r k))
                     this-type.__fields__
 
-    inline __repr (self)
-        using import radlib.string-utils
+    fn __repr (self)
+        using import radlib.stringtools
         let lo =
             try
                 fmt-hex ('unwrap self.operand-low)
@@ -202,7 +202,7 @@ fn log-instruction (snap line)
     print snap "\t" mode "\t" line
 
 for i entry in (enumerate log-snapshots)
-    using import radlib.string-utils
+    using import radlib.stringtools
     using import testing
     let current = (take-register-snapshot state)
 
