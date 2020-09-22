@@ -73,6 +73,13 @@ inline page-crossed? (prev next)
     nh := next >> 8
     oh != nh
 
+inline branch-relative (pc operand cycles)
+    next := pc + operand
+    if (page-crossed? pc next)
+        cycles += 1
+    pc += operand
+    cycles += 1
+
 inline implicit (cpu lo hi)
     ;
 
@@ -247,28 +254,21 @@ instruction-set NES6502
         0x90 -> relative
     execute
         if (not (fset? CF))
-            pc += operand
-            cycles += 1
+            branch-relative pc operand cycles
 
     # Branch if Carry Set
     instruction BCS
         0xB0 -> relative
     execute
         if (fset? CF)
-            pc += operand
-            cycles += 1
+            branch-relative pc operand cycles
 
     # Branch if Equal
     instruction BEQ
         0xF0 -> relative
     execute
         if (fset? ZF)
-            next := pc + operand
-            if (page-crossed? pc next)
-                cycles += 1
-            pc += operand
-            cycles += 1
-
+            branch-relative pc operand cycles
     # Bit Test
     instruction BIT
         0x24 -> zero-page
@@ -284,41 +284,35 @@ instruction-set NES6502
         0x30 -> relative
     execute
         if (fset? NF)
-            pc += operand
-            cycles += 1
+            branch-relative pc operand cycles
 
     # Branch if Not Equal
     instruction BNE
         0xD0 -> relative
     execute
         if (not (fset? ZF))
-            pc += operand
-            cycles += 1
-
+            branch-relative pc operand cycles
 
     # Branch if Positive
     instruction BPL
         0x10 -> relative
     execute
         if (not (fset? NF))
-            pc += operand
-            cycles += 1
+            branch-relative pc operand cycles
 
     # Branch if Overflow Clear
     instruction BVC
         0x50 -> relative
     execute
         if (not (fset? VF))
-            pc += operand
-            cycles += 1
+            branch-relative pc operand cycles
 
     # Branch if Overflow Set
     instruction BVS
         0x70 -> relative
     execute
         if (fset? VF)
-            pc += operand
-            cycles += 1
+            branch-relative pc operand cycles
 
     # Clear Carry Flag
     instruction CLC
