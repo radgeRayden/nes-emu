@@ -19,7 +19,7 @@ struct RegisterSnapshot
     operand-low  : (Option u8)
     operand-high : (Option u8)
 
-    # cycles : u64
+    cycles : u64
 
     inline __== (lhsT rhsT)
         static-if (lhsT == rhsT)
@@ -45,6 +45,7 @@ struct RegisterSnapshot
         s := self
         let PC A X Y P SP = (va-map fmt-hex s.PC s.A s.X s.Y s.P s.SP)
         let op = (fmt-hex s.opcode false)
+        let cyc = (sc_default_styler 'style-number (tostring s.cycles))
         local mnemonic = s.mnemonic
         let flags =
             fold (result = "") for i c in (enumerate "NV54DIZC")
@@ -54,9 +55,9 @@ struct RegisterSnapshot
                 .. result
                     ? bit-set?
                         sc_default_styler 'style-string str
-                        sc_default_styler 'style-comment str
+                        sc_default_styler 'style-comment "-"
 
-        f"${PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}  ${flags} "
+        f"${PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}  ${flags} CYC:${cyc}"
 
 fn parse-log (path)
     using stdio
@@ -107,7 +108,7 @@ fn parse-log (path)
                 &snap.SP
         assert (ins-byte-count == 5)
 
-        # assert (sscanf (reftoptr (line @ 90)) "%llu" &snap.cycles)
+        assert (sscanf (reftoptr (line @ 90)) "%llu" &snap.cycles)
 
         'append logged-state snap
         ;
@@ -143,7 +144,7 @@ fn take-register-snapshot (cpu)
         mnemonic = mnemonic
         operand-low = lo
         operand-high = hi
-        # cycles = cpu.cycles
+        cycles = cpu.cycles
 
 fn dump-memory (cpu path)
     using stdio
