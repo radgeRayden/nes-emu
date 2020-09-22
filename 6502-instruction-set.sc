@@ -58,6 +58,8 @@ inline relative (cpu lo hi)
     lo as i8
 
 inline absolute (cpu lo hi)
+    # one extra cycle to fetch the high byte
+    cpu.cycles += 1
     AbsoluteOperand (joinLE lo hi) cpu
 
 inline absoluteX (cpu lo hi)

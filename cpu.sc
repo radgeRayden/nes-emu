@@ -143,6 +143,8 @@ struct CPUState
         hi := self.mmem @ (pc + 2)
         instruction := self.itable @ op
         pc += ((get-instruction-length instruction.addrmode) as u16)
+        # instructions take at least 2 cycles
+        self.cycles += 2
         'execute instruction self lo hi
         ;
 
