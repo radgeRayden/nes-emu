@@ -1,6 +1,8 @@
 using import radlib.core-extensions
 using import radlib.foreign
 
+load-library (module-dir .. "/bin/libsokol.so")
+
 define-scope gfx
     let header =
         include
