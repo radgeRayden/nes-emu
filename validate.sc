@@ -282,6 +282,7 @@ load-iNES state romdata
 
 let log-snapshots = (parse-log nestest-log-path)
 
+'power-up state
 # for this test we set PC to 0xc000 as instructed by the test documentation (nestest.txt)
 state.PC = 0xC000
 

@@ -76,17 +76,17 @@ struct CPUState
                     ins.fun = NYI
             itable
 
-        # set power up state
         super-type.__typecall cls
-            RS = 0xFD
-            # FIXME: this is very likely incorrect, I
-            # just set it to point to start of PRG ROM.
-            PC = 0x8000
-            RP = 0x24
-            # starts at 7 because of some init work the cpu does
-            cycles = 7
             mmem = mmem
             itable = (gen-itable)
+
+    fn power-up (self)
+        self.RS = 0xFD
+        let pcl pch = (self.mmem @ 0xFFFC) (self.mmem @ 0xFFFD)
+        self.PC = (joinLE pcl pch)
+        self.RP = 0x24
+        # starts at 7 because of some init work the cpu does
+        self.cycles = 7
 
     inline... set-flag (self, flag : StatusFlag, v : bool)
         let flag-bit = (flag as u8)
