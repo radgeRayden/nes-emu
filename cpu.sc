@@ -23,11 +23,21 @@ spice fill-instruction-table (table scope)
         sc_expression_append expr (append ('@ (v as Scope) 'byte) v)
     expr
 
-run-stage;
-
 fn NYI (cpu lo hi)
     print "this opcode is illegal or not yet implemented:" (hex (cpu.mmem @ (cpu.PC - 1)))
     ;
+
+spice build-instruction-switch (cpu op lo hi scope)
+    let sw = (sc_switch_new op)
+    for k v in (scope as Scope)
+        sc_switch_append_case sw ('@ (v as Scope) 'byte)
+            spice-quote
+                v.fun cpu lo hi
+    sc_switch_append_default sw `(NYI cpu lo hi)
+    sw
+
+run-stage;
+
 
 struct CPUState
     # registers
