@@ -23,17 +23,20 @@ spice fill-instruction-table (table scope)
         sc_expression_append expr (append ('@ (v as Scope) 'byte) v)
     expr
 
-fn NYI (cpu lo hi)
-    print "this opcode is illegal or not yet implemented:" (hex (cpu.mmem @ (cpu.PC - 1)))
-    ;
+vvv bind NYI
+do
+    fn fun (cpu lo hi)
+        print "this opcode is illegal or not yet implemented:" (hex (cpu.mmem @ (cpu.PC - 1)))
+        ;
+    let mnemonic = "NYI"
+    let addrmode = 'immediate
+    locals;
 
-spice build-instruction-switch (cpu op lo hi scope)
-    let sw = (sc_switch_new op)
-    for k v in (scope as Scope)
-        sc_switch_append_case sw ('@ (v as Scope) 'byte)
-            spice-quote
-                v.fun cpu lo hi
-    sc_switch_append_default sw `(NYI cpu lo hi)
+spice build-instruction-switch (scope opcode f)
+    let sw = (sc_switch_new opcode)
+    for k ins in (scope as Scope)
+        sc_switch_append_case sw ('@ (ins as Scope) 'byte) `(f ins)
+    sc_switch_append_default sw `(f [NYI])
     sw
 
 run-stage;
@@ -83,7 +86,7 @@ struct CPUState
             for i in (range (countof itable))
                 ins := itable @ i
                 if (ins.fun == null)
-                    ins.fun = NYI
+                    ins.fun = NYI.fun
             itable
 
         super-type.__typecall cls
