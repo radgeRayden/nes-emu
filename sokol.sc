@@ -3,27 +3,34 @@ using import radlib.foreign
 
 load-library (module-dir .. "/bin/libsokol.so")
 
+# define-scope gfx
+
+
+let sokol =
+    include
+        """"#include "sokol/sokol_gfx.h"
+            #include "sokol/sokol_app.h"
+            #include "sokol/sokol_glue.h"
+
 define-scope gfx
-    let header =
-        include
-            "sokol/sokol_gfx.h"
-    using header.extern filter "sg_"
-    using header.typedef filter "sg_"
-    using header.define
-    using header.enum filter "SG_"
-    using header.struct
+    using sokol.extern filter "sg_"
+    using sokol.typedef filter "sg_"
+    using sokol.define
+    using sokol.enum filter "SG_"
+    using sokol.struct
 
 define-scope app
-    let header =
-        include
-            "sokol/sokol_app.h"
-    using header.extern filter "sapp_"
-    using header.typedef filter "sapp_"
-    using header.define
-    using header.enum
-    using header.struct
+    using sokol.extern filter "sapp_"
+    using sokol.typedef filter "sapp_"
+    using sokol.define
+    using sokol.enum
+    using sokol.struct
+
+define-scope glue
+    let sgcontext = sokol.extern.sapp_sgcontext
 
 do
     let gfx = (sanitize-scope gfx "^sg_")
     let app = (sanitize-scope app "^sapp_")
+    let glue
     locals;
