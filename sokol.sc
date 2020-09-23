@@ -29,6 +29,11 @@ define-scope app
 define-scope glue
     let sgcontext = sokol.extern.sapp_sgcontext
 
+for k v in sokol.enum
+    'set-symbol (v as type) '__typecall
+        inline (cls)
+            bitcast 0 cls
+
 do
     let gfx = (sanitize-scope gfx "^sg_")
     let app = (sanitize-scope app "^sapp_")
