@@ -112,7 +112,7 @@ struct CPUState
     # this means that we write to the position where sp is, then decrement it,
     # and pull from sp + 1.
     # https://wiki.nesdev.com/w/index.php/Stack
-    fn push-stack (self v)
+    inline push-stack (self v)
         let vT = (typeof v)
         sp := self.RS
         static-if ((storageof vT) == u16)
@@ -128,7 +128,7 @@ struct CPUState
             sp -= 1
             ;
 
-    fn pull-stack (self n)
+    inline pull-stack (self n)
         sp := self.RS
         let idx = ((joinLE sp 0x01) + 1)
         static-match n
