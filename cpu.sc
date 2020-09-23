@@ -58,10 +58,10 @@ struct CPUState
             byte     : u8
             mnemonic : string = "NYI"
             addrmode : Symbol = 'implicit
-            fun      : (pointer (function void (viewof (mutable@ cpuT) 1) u8 u8))
+            fun      : (pointer (function void (viewof (mutable (& cpuT)) 1) u8 u8))
 
             fn execute (self cpu lo hi)
-                self.fun &cpu lo hi
+                self.fun cpu lo hi
 
             fn length (self)
                 get-instruction-length self.addrmode

@@ -17,8 +17,6 @@ sugar instruction-set (name body...)
                     [let] mnemonic = [(tostring mnemonic)]
                     [let] addrmode = ([sugar-quote] [addr-router])
                     [inline] fun (cpu lo hi)
-                        [let] cpu = ([ptrtoref] cpu)
-
                         unquote-splice header
 
                         [let] operand =
