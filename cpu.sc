@@ -6,42 +6,6 @@ using import .helpers
 using import .nes-common
 using import .6502-instruction-set
 
-spice fill-instruction-table (table scope)
-    inline append (i v)
-        spice-quote
-            table @ [i] =
-                typeinit
-                    byte = [i]
-                    mnemonic = v.mnemonic
-                    addrmode = v.addrmode
-                    fun =
-                        fn (cpu lo hi)
-                            v.fun cpu lo hi
-
-    let expr = (sc_expression_new)
-    for k v in (scope as Scope)
-        sc_expression_append expr (append ('@ (v as Scope) 'byte) v)
-    expr
-
-vvv bind NYI
-do
-    fn fun (cpu lo hi)
-        print "this opcode is illegal or not yet implemented:" (hex (cpu.mmem @ (cpu.PC - 1)))
-        ;
-    let mnemonic = "NYI"
-    let addrmode = 'immediate
-    locals;
-
-spice build-instruction-switch (scope opcode f)
-    let sw = (sc_switch_new opcode)
-    for k ins in (scope as Scope)
-        sc_switch_append_case sw ('@ (ins as Scope) 'byte) `(f ins)
-    sc_switch_append_default sw `(f [NYI])
-    sw
-
-run-stage;
-
-
 struct CPUState
     # registers
     RA : ByteRegister  # accumulator
@@ -55,43 +19,14 @@ struct CPUState
     let MappedMemoryT = (Array u8 AddressableMemorySize)
     mmem : MappedMemoryT
 
-    let cpuT = this-type
-    let InstructionT =
-        struct Instruction plain
-            byte     : u8
-            mnemonic : string = "NYI"
-            addrmode : Symbol = 'implicit
-            fun      : (pointer (function void (viewof (mutable (& cpuT)) 1) u8 u8))
-
-            fn execute (self cpu lo hi)
-                self.fun cpu lo hi
-
-            fn length (self)
-                get-instruction-length self.addrmode
-    unlet cpuT
-
-    itable : (Array InstructionT 256)
-
     cycles : u64
 
     inline __typecall (cls)
         local mmem = (MappedMemoryT)
         'resize mmem ('capacity mmem)
 
-        # in a function to avoid trashing callee with instructions
-        fn gen-itable ()
-            local itable : (Array InstructionT 256)
-            'resize itable ('capacity itable)
-            fill-instruction-table itable NES6502
-            for i in (range (countof itable))
-                ins := itable @ i
-                if (ins.fun == null)
-                    ins.fun = NYI.fun
-            itable
-
         super-type.__typecall cls
             mmem = mmem
-            itable = (gen-itable)
 
     fn power-up (self)
         self.RS = 0xFD
@@ -154,11 +89,14 @@ struct CPUState
         op := self.mmem @ pc
         lo := self.mmem @ (pc + 1)
         hi := self.mmem @ (pc + 2)
-        instruction := self.itable @ op
-        pc += ((get-instruction-length instruction.addrmode) as u16)
         # instructions take at least 2 cycles
         self.cycles += 2
-        'execute instruction self lo hi
+
+        using import .instruction-set
+        build-instruction-switch NES6502 op
+            inline (ins)
+                pc += ((get-instruction-length ins.addrmode) as u16)
+                ins.fun self lo hi
         ;
 
 do

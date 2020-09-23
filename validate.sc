@@ -3,6 +3,8 @@ using import Array
 using import Option
 using import struct
 
+using import .instruction-set
+using import .6502-instruction-set
 using import .cpu
 using import .helpers
 
@@ -206,12 +208,17 @@ fn parse-log (path)
     deref logged-state
 
 fn take-register-snapshot (cpu)
-    let op = (cpu.itable @ (cpu.mmem @ cpu.PC))
+    let byte = (cpu.mmem @ cpu.PC)
+    let mnemonic addrmode =
+        build-instruction-switch NES6502 byte
+            inline (ins)
+                _ ins.mnemonic ins.addrmode
+
     let optT = (Option u8)
     # next two bytes after opcode
     let b1 b2 = (cpu.mmem @ (cpu.PC + 1)) (cpu.mmem @ (cpu.PC + 2))
     let lo hi =
-        match ('length op)
+        match (get-instruction-length addrmode)
         case 1
             _ (optT.None) (optT.None)
         case 2
@@ -219,9 +226,13 @@ fn take-register-snapshot (cpu)
         default
             _ (optT b1) (optT b2)
 
-    local mnemonic : (array i8 4)
-    for i c in (enumerate op.mnemonic)
-        mnemonic @ i = c
+    let mnemonic =
+        do
+            local cstr : (array i8 4)
+            for i c in (enumerate mnemonic)
+                cstr @ i = c
+            cstr
+
     RegisterSnapshot
         A  = cpu.RA
         X  = cpu.RX
@@ -229,7 +240,7 @@ fn take-register-snapshot (cpu)
         PC = cpu.PC
         SP  = cpu.RS
         P  = cpu.RP
-        opcode = op.byte
+        opcode = byte
         mnemonic = mnemonic
         operand-low = lo
         operand-high = hi
@@ -289,7 +300,10 @@ state.PC = 0xC000
 LOG_EVERY_INSTRUCTION := false
 
 fn log-instruction (snap line)
-    let mode = (tostring ((state.itable @ snap.opcode) . addrmode))
+    let mode =
+        build-instruction-switch NES6502 snap.opcode
+            inline (ins)
+                tostring ins.addrmode
     print snap "\t" mode "\t" line
 
 for i entry in (enumerate log-snapshots)

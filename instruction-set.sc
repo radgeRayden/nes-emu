@@ -62,4 +62,21 @@ sugar instruction-set (name body...)
     # print result
     result
 
+
+spice build-instruction-switch (scope opcode f)
+    vvv bind NYI
+    do
+        fn fun (cpu lo hi)
+            print "this opcode is illegal or not yet implemented:" (hex (cpu.mmem @ (cpu.PC - 1)))
+            ;
+        let mnemonic = "NYI"
+        let addrmode = 'immediate
+        locals;
+
+    let sw = (sc_switch_new opcode)
+    for k ins in (scope as Scope)
+        sc_switch_append_case sw ('@ (ins as Scope) 'byte) `(f ins)
+    sc_switch_append_default sw `(f [NYI])
+    sw
+
 locals;
