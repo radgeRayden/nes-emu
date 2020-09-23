@@ -128,7 +128,7 @@ struct CPUState
             sp -= 1
             ;
 
-    inline pull-stack (self n)
+    fn pull-stack (self n)
         sp := self.RS
         let idx = ((joinLE sp 0x01) + 1)
         static-match n
