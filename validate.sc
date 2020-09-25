@@ -322,7 +322,7 @@ for i entry in (enumerate log-snapshots)
             log-instruction current (i + 1)
     test equal?
         f"entry ${i + 1} didn't match CPU state!"
-    'next state
+    'step-instruction state
     ;
 
 print "Validation succesful!"

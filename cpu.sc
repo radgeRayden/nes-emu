@@ -81,7 +81,7 @@ struct CPUState
         default
             static-error "must always pull one or two bytes from the stack"
 
-    fn next (self)
+    fn step-instruction (self)
         pc := self.PC
         # NOTE: we don't do range checking here because pc is
         # only 16-bits wide, which gets us the desired behaviour of
