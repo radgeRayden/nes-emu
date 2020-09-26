@@ -6,7 +6,6 @@ using import glm
 import .sokol
 let sapp = sokol.app
 let sg = sokol.gfx
-import .cartridge
 using import .nes
 
 global emulator : NESEmulator
@@ -137,8 +136,7 @@ let argc argv = (launch-args)
 if (argc < 3)
     error "please supply a ROM as argument"
 let path = (argv @ 2)
-let ROM = (cartridge.load-ROM path)
-'insert-cart emulator ROM
+'insert-cart emulator path
 
 sapp.run
     &local sapp.desc

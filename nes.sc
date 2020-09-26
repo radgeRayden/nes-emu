@@ -1,6 +1,7 @@
 using import Array
 using import struct
 using import .cpu
+import .cartridge
 
 struct NESEmulator
     cpu : CPUState
@@ -25,7 +26,8 @@ struct NESEmulator
             arr @ (idx + 3) = 255
         deref arr
 
-    fn insert-cart (self ROM)
+    fn insert-cart (self path)
+        let ROM = (cartridge.load-ROM path)
         ;
 
 do
