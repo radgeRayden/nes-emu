@@ -25,6 +25,9 @@ struct NESEmulator
             arr @ (idx + 3) = 255
         deref arr
 
+    fn insert-cart (self ROM)
+        ;
+
 do
     let NESEmulator
     locals;
