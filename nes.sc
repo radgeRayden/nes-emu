@@ -27,7 +27,7 @@ struct NESEmulator
         deref arr
 
     fn insert-cart (self path)
-        let ROM = (cartridge.load-ROM path)
+        let cart = (cartridge.load-ROM path)
         ;
 
 do
