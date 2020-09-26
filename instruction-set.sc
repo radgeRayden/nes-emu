@@ -1,3 +1,7 @@
+# This file contains a DSL to define instructions by addressing mode. At the moment of writing
+# it requires a header that provides the addressing mode routers, inlines that massage the operand
+# into something generic that the instruction can use unmodified.
+
 sugar instruction-set (name body...)
     let header rest =
         sugar-match body...
@@ -62,7 +66,6 @@ sugar instruction-set (name body...)
                     unquote-splice ('reverse instructions)
                 [locals];
     result
-
 
 spice build-instruction-switch (scope opcode f)
     vvv bind NYI

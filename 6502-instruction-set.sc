@@ -1,3 +1,14 @@
+# This module defines every instruction for the NES MOS6502.
+# I've extensively referenced the following resources:
+# - http://obelisk.me.uk/6502/reference.html - describes every instruction and lists opcodes,
+#   along with the flags affected;
+# - http://obelisk.me.uk/6502/addressing.html and https://wiki.nesdev.com/w/index.php/CPU_addressing_modes
+#   for understanding how the different addressing modes behave;
+# - http://nesdev.com/6502_cpu.txt - lists undocumented opcodes with addressing modes, among
+#   other useful info.
+# - https://skilldrick.github.io/easy6502/ for quickly checking my assumptions around certain
+#   instructions.
+
 using import struct
 
 using import .instruction-set
