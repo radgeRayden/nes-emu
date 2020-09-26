@@ -4,7 +4,7 @@ sugar instruction-set (name body...)
         case (('with-header header...) rest...)
             _ (header... as list) rest...
         default
-            error "!"
+            error "incorrect syntax, was supposed to be `instruction-set @name @body...`'"
 
     inline gen-opcode-entry (mnemonic opcode addr-router body additional-args)
         mnemonic as:= Symbol
@@ -47,10 +47,12 @@ sugar instruction-set (name body...)
                                 gen-opcode-entry mnemonic opcode router body... args...
                                 opcodes
                         default
-                            error "!"
+                            error
+                                "incorrect syntax, was supposed to be `@opcode -> @router [additional arguments...]'"
                     _ opcodes rest...
                 default
-                    error "!"
+                    error
+                        "incorrect syntax, was supposed to be `(instruction @mnemonic @opcodes...) (execute @body...)'"
             _ (cons ('reverse instruction) result) rest
     vvv bind result
     qq
