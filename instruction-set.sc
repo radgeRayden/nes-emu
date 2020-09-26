@@ -61,7 +61,6 @@ sugar instruction-set (name body...)
                 [embed]
                     unquote-splice ('reverse instructions)
                 [locals];
-    # print result
     result
 
 
