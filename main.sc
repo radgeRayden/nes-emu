@@ -19,48 +19,67 @@ struct RenderingState plain
 global gfx-state : RenderingState
 
 
-let vshader fshader =
-    do
-        using import glsl
-        fn vertex ()
-            local vertices =
-                arrayof vec2
-                    vec2 -1  1 # top left
-                    vec2 -1 -1 # bottom left
-                    vec2  1 -1 # bottom right
-                    vec2  1 -1 # bottom right
-                    vec2  1  1 # top right
-                    vec2 -1  1 # top left
+fn event-handler (ev)
+    ;
 
-            local texcoords =
-                arrayof vec2
-                    vec2 0 1 # top left
-                    vec2 0 0 # bottom left
-                    vec2 1 0 # bottom right
-                    vec2 1 0 # bottom right
-                    vec2 1 1 # top right
-                    vec2 0 1 # top left
+fn update ()
+    # get frame from emulator and update the texture on the gpu
+    let frame-tex = ('get-frame emulator)
+    let subimage =
+        sg.subimage_content ((imply frame-tex pointer) as voidstar) ((countof frame-tex) as i32)
+    local image-content : sg.image_content
+    (image-content.subimage @ 0) @ 0 = subimage
+    sg.update_image (gfx-state.bindings.fs_images @ 0) &image-content
 
-            out vtexcoord : vec2
-                location = 0
-
-            gl_Position = (vec4 (vertices @ gl_VertexID) 0 1)
-            vtexcoord = texcoords @ gl_VertexID
-
-        fn fragment ()
-            uniform tex : sampler2D
-                set = 0
-                binding = 1
-
-            in vtexcoord : vec2
-                location = 0
-            out fcolor : vec4
-                location = 0
-
-            fcolor = (texture tex vtexcoord)
-        _ vertex fragment
+    sg.begin_default_pass &gfx-state.pass-action 256 240
+    sg.apply_pipeline gfx-state.pipeline
+    sg.apply_bindings &gfx-state.bindings
+    sg.draw 0 6 1
+    sg.end_pass;
+    sg.commit;
 
 fn init ()
+    let vshader fshader =
+        do
+            using import glsl
+            fn vertex ()
+                local vertices =
+                    arrayof vec2
+                        vec2 -1  1 # top left
+                        vec2 -1 -1 # bottom left
+                        vec2  1 -1 # bottom right
+                        vec2  1 -1 # bottom right
+                        vec2  1  1 # top right
+                        vec2 -1  1 # top left
+
+                local texcoords =
+                    arrayof vec2
+                        vec2 0 1 # top left
+                        vec2 0 0 # bottom left
+                        vec2 1 0 # bottom right
+                        vec2 1 0 # bottom right
+                        vec2 1 1 # top right
+                        vec2 0 1 # top left
+
+                out vtexcoord : vec2
+                    location = 0
+
+                gl_Position = (vec4 (vertices @ gl_VertexID) 0 1)
+                vtexcoord = texcoords @ gl_VertexID
+
+            fn fragment ()
+                uniform tex : sampler2D
+                    set = 0
+                    binding = 1
+
+                in vtexcoord : vec2
+                    location = 0
+                out fcolor : vec4
+                    location = 0
+
+                fcolor = (texture tex vtexcoord)
+            _ vertex fragment
+
     sg.setup
         &local sg.desc
             context = (sokol.glue.sgcontext)
@@ -109,25 +128,8 @@ fn init ()
                     &local (arrayof f32 0 0 0 0 0 0)
     ;
 
-fn update ()
-    # get frame from emulator and update the texture on the gpu
-    let frame-tex = ('get-frame emulator)
-    let subimage =
-        sg.subimage_content ((imply frame-tex pointer) as voidstar) ((countof frame-tex) as i32)
-    local image-content : sg.image_content
-    (image-content.subimage @ 0) @ 0 = subimage
-    sg.update_image (gfx-state.bindings.fs_images @ 0) &image-content
-
-    sg.begin_default_pass &gfx-state.pass-action 256 240
-    sg.apply_pipeline gfx-state.pipeline
-    sg.apply_bindings &gfx-state.bindings
-    sg.draw 0 6 1
-    sg.end_pass;
-    sg.commit;
-
 fn cleanup ()
     sg.shutdown;
-fn event-handler (ev)
 
 # ================================================================================
 
