@@ -1,11 +1,14 @@
 using import radlib.core-extensions
 
+
 using import struct
 using import glm
 
 import .sokol
 let sapp = sokol.app
 let sg = sokol.gfx
+let ig = (import .cimgui)
+
 using import .nes
 
 global emulator : NESEmulator
@@ -20,9 +23,19 @@ global gfx-state : RenderingState
 
 
 fn event-handler (ev)
+    sokol.imgui.handle_event ev
     ;
 
+fn draw-UI ()
+    let width height = (sapp.width) (sapp.height)
+    # FIXME: get an actual deltatime
+    sokol.imgui.new_frame width height (1 / 60)
+    ig.Text "Hello world"
+
+
 fn update ()
+    draw-UI;
+
     # get frame from emulator and update the texture on the gpu
     let frame-tex = ('get-frame emulator)
     let subimage =
@@ -34,11 +47,15 @@ fn update ()
     sg.begin_default_pass &gfx-state.pass-action 256 240
     sg.apply_pipeline gfx-state.pipeline
     sg.apply_bindings &gfx-state.bindings
+
     sg.draw 0 6 1
+    sokol.imgui.render;
+
     sg.end_pass;
     sg.commit;
 
 fn init ()
+    # SOKOL GFX
     let vshader fshader =
         do
             using import glsl
@@ -126,6 +143,9 @@ fn init ()
                 size = 6
                 content =
                     &local (arrayof f32 0 0 0 0 0 0)
+
+    # IMGUI
+    sokol.imgui.setup (&local sokol.imgui.desc_t)
     ;
 
 fn cleanup ()
