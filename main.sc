@@ -30,9 +30,13 @@ fn draw-UI ()
     let width height = (sapp.width) (sapp.height)
     # FIXME: get an actual deltatime
     sokol.imgui.new_frame width height (1 / 60)
-    ig.Text "Hello world"
-
-
+    if (ig.BeginMainMenuBar)
+        if (ig.BeginMenu "File" true)
+            if (ig.MenuItemBool "Open..." "Ctrl+O" false true)
+                ;
+            ig.EndMenu;
+        ;
+    ig.EndMainMenuBar;
 fn update ()
     draw-UI;
 
