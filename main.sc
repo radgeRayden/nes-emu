@@ -44,7 +44,7 @@ fn update ()
     (image-content.subimage @ 0) @ 0 = subimage
     sg.update_image (gfx-state.bindings.fs_images @ 0) &image-content
 
-    sg.begin_default_pass &gfx-state.pass-action 256 240
+    sg.begin_default_pass &gfx-state.pass-action (sapp.width) (sapp.height)
     sg.apply_pipeline gfx-state.pipeline
     sg.apply_bindings &gfx-state.bindings
 
@@ -131,6 +131,8 @@ fn init ()
         width = 256
         height = 240
         usage = sg.usage.SG_USAGE_DYNAMIC
+        min_filter = sg.filter.SG_FILTER_NEAREST
+        mag_filter = sg.filter.SG_FILTER_NEAREST
 
     let bindings = gfx-state.bindings
     bindings.fs_images @ 0 = (sg.make_image &imgdesc)
@@ -162,8 +164,8 @@ let path = (argv @ 2)
 
 sapp.run
     &local sapp.desc
-        width = 256
-        height = 240
+        width = (256 * 3)
+        height = (240 * 3)
         init_cb = init
         frame_cb = update
         cleanup_cb = cleanup
