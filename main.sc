@@ -37,7 +37,7 @@ fn app-UI ()
                 ;
             ig.EndMenu;
         if (ig.BeginMenu "Emulator" true)
-            if (ig.MenuItemBool "Reset" "Ctrl+F" false true)
+            if (ig.MenuItemBool "Reset" "Ctrl+R" false true)
                 ;
             if (ig.MenuItemBool "Stop" "" false true)
                 emulator = none
@@ -45,6 +45,7 @@ fn app-UI ()
             ig.EndMenu;
         ;
     ig.EndMainMenuBar;
+
 fn update ()
     app-UI;
 
