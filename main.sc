@@ -5,6 +5,7 @@ using import struct
 using import glm
 using import Option
 
+import .nfd
 import .sokol
 let sapp = sokol.app
 let sg = sokol.gfx
@@ -22,9 +23,22 @@ struct RenderingState plain
 
 global gfx-state : RenderingState
 
-
-fn event-handler (ev)
-    sokol.imgui.handle_event ev
+fn select-ROM-file ()
+    local selected : (mutable rawstring)
+    let result = (nfd.OpenDialog "nes" module-dir &selected)
+    switch result
+    case nfd.result_t.NFD_OKAY
+        let fresh-emu = (NESEmulator)
+        try
+            'insert-cart fresh-emu (string selected)
+            emulator = fresh-emu
+        else
+            print "could not load ROM file at" (string selected)
+        free selected
+    case nfd.result_t.NFD_CANCEL
+        ;
+    default
+        print "error:" (string (nfd.GetError))
     ;
 
 fn app-UI ()
@@ -34,7 +48,7 @@ fn app-UI ()
     if (ig.BeginMainMenuBar)
         if (ig.BeginMenu "File" true)
             if (ig.MenuItemBool "Open..." "Ctrl+O" false true)
-                ;
+                select-ROM-file;
             ig.EndMenu;
         if (ig.BeginMenu "Emulator" true)
             if (ig.MenuItemBool "Reset" "Ctrl+R" false true)
@@ -72,6 +86,10 @@ fn update ()
 
     sg.end_pass;
     sg.commit;
+
+fn event-handler (ev)
+    sokol.imgui.handle_event ev
+    ;
 
 fn init ()
     # SOKOL GFX
