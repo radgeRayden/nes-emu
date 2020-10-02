@@ -2,7 +2,6 @@ using import radlib.core-extensions
 using import radlib.foreign
 
 load-library (module-dir .. "/bin/libsokol.so")
-load-library (module-dir .. "/bin/cimgui.so")
 
 let sokol =
     include

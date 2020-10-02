@@ -3,6 +3,7 @@ using import radlib.core-extensions
 
 using import struct
 using import glm
+using import Option
 
 import .sokol
 let sapp = sokol.app
@@ -11,7 +12,7 @@ let ig = (import .cimgui)
 
 using import .nes
 
-global emulator : NESEmulator
+global emulator : (Option NESEmulator)
 
 struct RenderingState plain
     pass-action : sg.pass_action
@@ -26,7 +27,7 @@ fn event-handler (ev)
     sokol.imgui.handle_event ev
     ;
 
-fn draw-UI ()
+fn app-UI ()
     let width height = (sapp.width) (sapp.height)
     # FIXME: get an actual deltatime
     sokol.imgui.new_frame width height (1 / 60)
@@ -35,24 +36,37 @@ fn draw-UI ()
             if (ig.MenuItemBool "Open..." "Ctrl+O" false true)
                 ;
             ig.EndMenu;
+        if (ig.BeginMenu "Emulator" true)
+            if (ig.MenuItemBool "Reset" "Ctrl+F" false true)
+                ;
+            if (ig.MenuItemBool "Stop" "" false true)
+                emulator = none
+                ;
+            ig.EndMenu;
         ;
     ig.EndMainMenuBar;
 fn update ()
-    draw-UI;
-
-    # get frame from emulator and update the texture on the gpu
-    let frame-tex = ('get-frame emulator)
-    let subimage =
-        sg.subimage_content ((imply frame-tex pointer) as voidstar) ((countof frame-tex) as i32)
-    local image-content : sg.image_content
-    (image-content.subimage @ 0) @ 0 = subimage
-    sg.update_image (gfx-state.bindings.fs_images @ 0) &image-content
+    app-UI;
 
     sg.begin_default_pass &gfx-state.pass-action (sapp.width) (sapp.height)
-    sg.apply_pipeline gfx-state.pipeline
-    sg.apply_bindings &gfx-state.bindings
 
-    sg.draw 0 6 1
+    # if the emulator is turned on (cart inside) then we render the game framebuffer.
+    try
+        let emulator = ('unwrap emulator)
+        # get frame from emulator and update the texture on the gpu
+        let frame-tex = ('get-frame emulator)
+        let subimage =
+            sg.subimage_content ((imply frame-tex pointer) as voidstar) ((countof frame-tex) as i32)
+        local image-content : sg.image_content
+        (image-content.subimage @ 0) @ 0 = subimage
+        sg.update_image (gfx-state.bindings.fs_images @ 0) &image-content
+
+        sg.apply_pipeline gfx-state.pipeline
+        sg.apply_bindings &gfx-state.bindings
+        sg.draw 0 6 1
+    else
+        ;
+
     sokol.imgui.render;
 
     sg.end_pass;
@@ -161,10 +175,14 @@ fn cleanup ()
 
 let argc argv = (launch-args)
 # for now let's assume the only arg is the cart
-if (argc < 3)
-    error "please supply a ROM as argument"
-let path = (argv @ 2)
-'insert-cart emulator path
+if (argc > 2)
+    let path = (argv @ 2)
+    emulator = (NESEmulator)
+    try
+        let emulator = ('unwrap emulator)
+        'insert-cart emulator path
+    else
+        ;
 
 sapp.run
     &local sapp.desc
