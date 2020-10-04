@@ -36,7 +36,7 @@ struct CPUState
         # starts at 7 because of some init work the cpu does
         self.cycles = 7
 
-    inline... set-flag (self, flag : StatusFlag, v : bool)
+    inline set-flag (self flag v)
         let flag-bit = (flag as u8)
         if v
             self.RP |= (1:u8 << flag-bit)
