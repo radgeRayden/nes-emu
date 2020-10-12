@@ -15,6 +15,9 @@ using import .nes
 
 global emulator : (Option NESEmulator)
 
+struct AppState plain
+    paused? : bool
+
 struct RenderingState plain
     pass-action : sg.pass_action
     pipeline : sg.pipeline
@@ -22,6 +25,7 @@ struct RenderingState plain
     frame-tex : sg.image
 
 global gfx-state : RenderingState
+global app-state : AppState
 
 fn select-ROM-file ()
     local selected : (mutable rawstring)
@@ -56,6 +60,8 @@ fn app-UI ()
             if (ig.MenuItemBool "Stop" "" false true)
                 emulator = none
                 ;
+            ig.Separator;
+            ig.MenuItemBoolPtr (? app-state.paused? "Resume" "Pause") "" &app-state.paused? true
             ig.EndMenu;
         ;
     ig.EndMainMenuBar;
