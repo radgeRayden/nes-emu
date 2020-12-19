@@ -1,5 +1,5 @@
-using import radlib.core-extensions
-using import radlib.foreign
+using import .radlib.core-extensions
+using import .radlib.foreign
 
 load-library "libgtk-3.so"
 load-library "./bin/libnfd.so"

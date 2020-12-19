@@ -1,5 +1,5 @@
-using import radlib.core-extensions
-using import radlib.foreign
+using import .radlib.core-extensions
+using import .radlib.foreign
 
 load-library (module-dir .. "/bin/cimgui.so")
 

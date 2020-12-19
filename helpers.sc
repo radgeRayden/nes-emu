@@ -49,7 +49,7 @@ fn... fmt-hex (i, color? = true)
         str
 
 fn read-whole-file (path)
-    import radlib.libc
+    import .radlib.libc
     using radlib.libc.stdio
 
     fhandle := (fopen path "rb")

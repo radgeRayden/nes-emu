@@ -13,3 +13,6 @@
 [submodule "nativefiledialog"]
 	path = nativefiledialog
 	url = https://github.com/mlabbe/nativefiledialog
+[submodule "radlib"]
+	path = radlib
+	url = https://github.com/radgeRayden/radlib

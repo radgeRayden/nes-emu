@@ -1,5 +1,4 @@
-using import radlib.core-extensions
-
+using import .radlib.core-extensions
 
 using import struct
 using import glm

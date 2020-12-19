@@ -1,4 +1,4 @@
-using import radlib.libc
+let C =  (import .radlib.libc)
 using import Array
 using import Option
 using import struct
@@ -33,7 +33,7 @@ struct RegisterSnapshot
                     this-type.__fields__
 
     fn __repr (self)
-        using import radlib.stringtools
+        using import .radlib.stringtools
         let lo =
             try
                 fmt-hex ('unwrap self.operand-low)
@@ -63,7 +63,7 @@ struct RegisterSnapshot
 
     fn display-diff (ours theirs)
         # we have to duplicate the repr code to be able to use different colors :(
-        using import radlib.stringtools
+        using import .radlib.stringtools
         inline highlight (str correct?)
             if (not correct?)
                 sc_default_styler 'style-error str
@@ -151,8 +151,8 @@ struct RegisterSnapshot
         print theirs
 
 fn parse-log (path)
-    using stdio
-    using _string
+    using C.stdio
+    using C.string
     let fhandle = (fopen path "r")
     assert (fhandle != null)
 
@@ -247,7 +247,7 @@ fn take-register-snapshot (cpu)
         cycles = cpu.cycles
 
 fn dump-memory (cpu path)
-    using stdio
+    using C.stdio
     let fhandle = (fopen path "wb")
     if (fhandle == null)
         error "could not open file for writing"
@@ -271,7 +271,7 @@ fn load-iNES (cpu rom)
     # the features. Must be implemented on the actual loading function.
     assert ((16 + prg-rom-size + chr-rom-size) <= (countof rom))
 
-    let memcpy = _string.memcpy
+    let memcpy = C.string.memcpy
     let prg-romptr = (reftoptr (rom @ 0x10))
     let prg-rom-destptr = (reftoptr (cpu.mmem @ 0x8000))
     # NOTE: we know this ROM is only 16kb, so I'm just hardcoding this for now.
@@ -307,7 +307,7 @@ fn log-instruction (snap line)
     print snap "\t" mode "\t" line
 
 for i entry in (enumerate log-snapshots)
-    using import radlib.stringtools
+    using import .radlib.stringtools
     using import testing
     let current = (take-register-snapshot state)
 
