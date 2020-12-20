@@ -37,11 +37,10 @@ struct CPUState
         self.cycles = 7
 
     inline set-flag (self flag v)
-        let flag-bit = (flag as u8)
-        if v
-            self.RP |= (1:u8 << flag-bit)
-        else
-            self.RP &= (~ (1:u8 << flag-bit))
+        v := v as bool as u8 # enforce that our value is 0 or 1
+        flag as:= u8
+        let flags = self.RP
+        flags = (flags & (~ (1:u8 << flag))) | (v << flag)
 
     inline flag-set? (self flag)
         (self.RP & (1:u8 << (flag as u8))) as bool
