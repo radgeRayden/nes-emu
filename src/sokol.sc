@@ -1,7 +1,7 @@
 using import .radlib.core-extensions
 using import .radlib.foreign
 
-load-library (module-dir .. "/bin/libsokol.so")
+load-library (module-dir .. "/../bin/libsokol.so")
 
 let sokol =
     include
@@ -9,6 +9,8 @@ let sokol =
             #include "sokol/sokol_app.h"
             #include "sokol/sokol_glue.h"
             #include "sokol/util/sokol_imgui.h"
+        options
+            .. "-I" module-dir "/../native"
 
 define-scope gfx
     using sokol.extern filter "sg_"

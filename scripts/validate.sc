@@ -1,12 +1,12 @@
-let C =  (import .radlib.libc)
+let C =  (import ..src.radlib.libc)
 using import Array
 using import Option
 using import struct
 
-using import .instruction-set
-using import .6502-instruction-set
-using import .cpu
-using import .helpers
+using import ..src.instruction-set
+using import ..src.6502-instruction-set
+using import ..src.cpu
+using import ..src.helpers
 
 struct RegisterSnapshot
     PC : u16
@@ -33,7 +33,7 @@ struct RegisterSnapshot
                     this-type.__fields__
 
     fn __repr (self)
-        using import .radlib.stringtools
+        using import ..src.radlib.stringtools
         let lo =
             try
                 fmt-hex ('unwrap self.operand-low)
@@ -63,7 +63,7 @@ struct RegisterSnapshot
 
     fn display-diff (ours theirs)
         # we have to duplicate the repr code to be able to use different colors :(
-        using import .radlib.stringtools
+        using import ..src.radlib.stringtools
         inline highlight (str correct?)
             if (not correct?)
                 sc_default_styler 'style-error str
@@ -279,8 +279,8 @@ fn load-iNES (cpu rom)
     let prg-rom-destptr = (reftoptr (cpu.mmem @ 0xc000))
     memcpy prg-rom-destptr prg-romptr prg-rom-size
 
-nestest-path := module-dir .. "/validation/nes-test-roms/other/nestest.nes"
-nestest-log-path := module-dir .. "/validation/nestest.log"
+nestest-path := module-dir .. "/../validation/nes-test-roms/other/nestest.nes"
+nestest-log-path := module-dir .. "/../validation/nestest.log"
 let romdata =
     try
         read-whole-file nestest-path
@@ -307,7 +307,7 @@ fn log-instruction (snap line)
     print snap "\t" mode "\t" line
 
 for i entry in (enumerate log-snapshots)
-    using import .radlib.stringtools
+    using import ..src.radlib.stringtools
     using import testing
     let current = (take-register-snapshot state)
 
