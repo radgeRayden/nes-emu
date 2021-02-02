@@ -36,8 +36,10 @@ struct CPUState
         # starts at 7 because of some init work the cpu does
         self.cycles = 7
 
-    inline set-flag (self flag v)
-        v := v as bool as u8 # enforce that our value is 0 or 1
+    # because v is often the result of a bitwise operation, let's get a bit more
+    # security by enforcing its type as a boolean.
+    inline... set-flag (self, flag : StatusFlag, v : bool)
+        v as:= u8
         flag as:= u8
         let flags = self.RP
         flags = (flags & (~ (1:u8 << flag))) | (v << flag)
