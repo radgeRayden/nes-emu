@@ -297,7 +297,7 @@ let log-snapshots = (parse-log nestest-log-path)
 # for this test we set PC to 0xc000 as instructed by the test documentation (nestest.txt)
 state.PC = 0xC000
 
-LOG_EVERY_INSTRUCTION := false
+LOG_EVERY_INSTRUCTION := true
 
 fn log-instruction (snap line)
     let mode =

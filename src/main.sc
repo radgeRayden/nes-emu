@@ -44,6 +44,10 @@ fn select-ROM-file ()
         print "error:" (string (nfd.GetError))
     ;
 
+fn VRAM-viewer ()
+
+    ;
+
 fn app-UI ()
     let width height = (sapp.width) (sapp.height)
     # FIXME: get an actual deltatime
@@ -62,8 +66,11 @@ fn app-UI ()
             ig.Separator;
             ig.MenuItemBoolPtr (? app-state.paused? "Resume" "Pause") "" &app-state.paused? true
             ig.EndMenu;
+        # if (ig.BeginMenu "Tools" true)
+        #     if (ig.MenuItemBool "VRAM Viewer")
         ;
     ig.EndMainMenuBar;
+    VRAM-viewer;
 
 fn update ()
     app-UI;

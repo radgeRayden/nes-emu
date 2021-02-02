@@ -1,18 +1,15 @@
-[submodule "cpath"]
-	path = cpath
-	url = git@github.com:radgeRayden/cpath.git
 [submodule "nes-test-roms"]
 	path = validation/nes-test-roms
 	url = https://github.com/christopherpow/nes-test-roms
 [submodule "sokol"]
-	path = sokol
+	path = native/sokol
 	url = https://github.com/floooh/sokol
 [submodule "cimgui"]
-	path = cimgui
+	path = native/cimgui
 	url = https://github.com/cimgui/cimgui
 [submodule "nativefiledialog"]
-	path = nativefiledialog
+	path = native/nativefiledialog
 	url = https://github.com/mlabbe/nativefiledialog
 [submodule "radlib"]
-	path = radlib
+	path = src/radlib
 	url = https://github.com/radgeRayden/radlib
