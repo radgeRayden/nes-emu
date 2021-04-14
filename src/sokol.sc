@@ -1,7 +1,13 @@
 using import .radlib.core-extensions
 using import .radlib.foreign
 
-load-library (module-dir .. "/../bin/libsokol.so")
+switch operating-system
+case 'linux
+    load-library (module-dir .. "/../native/bin/libsokol.so")
+case 'windows
+    load-library (module-dir .. "/../native/bin/sokol.dll")
+default
+    error "OS not supported"
 
 let sokol =
     include

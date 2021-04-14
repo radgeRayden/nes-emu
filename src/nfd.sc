@@ -1,8 +1,14 @@
 using import .radlib.core-extensions
 using import .radlib.foreign
 
-load-library "libgtk-3.so"
-load-library "../bin/libnfd.so"
+switch operating-system
+case 'linux
+    load-library "libgtk-3.so"
+    load-library (.. module-dir "/../native/bin/libnfd.so")
+case 'windows
+    load-library (.. module-dir "/../native/bin/nfd.dll")
+default
+    error "OS not supported"
 
 define-scope nfd
     let header =

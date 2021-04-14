@@ -1,7 +1,8 @@
 using import .radlib.core-extensions
 using import .radlib.foreign
 
-load-library (module-dir .. "/../bin/cimgui.so")
+if (operating-system == 'linux)
+    load-library (module-dir .. "/../bin/cimgui.so")
 
 define-scope cimgui
     let header =
