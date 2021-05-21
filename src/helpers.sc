@@ -49,8 +49,8 @@ fn... fmt-hex (i, color? = true)
         str
 
 fn read-whole-file (path)
-    import .radlib.libc
-    using radlib.libc.stdio
+    import .libc
+    using libc.stdio
 
     fhandle := (fopen path "rb")
     if (fhandle == null)

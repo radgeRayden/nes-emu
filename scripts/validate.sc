@@ -1,4 +1,4 @@
-let C =  (import ..src.radlib.libc)
+let C =  (import ..src.libc)
 using import Array
 using import Option
 using import struct
@@ -9,17 +9,20 @@ using import ..src.cpu
 using import ..src.helpers
 
 struct RegisterSnapshot
+    # NOTE: due to %hhx format not being respected on windows (resulting in an overflow), we organize
+      the struct in read order to mitigate any problems.
     PC : u16
+    opcode : u8
+    operand-low  : (Option u8)
+    operand-high : (Option u8)
+    mnemonic : (array i8 4)
+
     A  : u8
     X  : u8
     Y  : u8
     P  : u8
     SP : u8
 
-    opcode : u8
-    mnemonic : (array i8 4)
-    operand-low  : (Option u8)
-    operand-high : (Option u8)
 
     cycles : u64
 
@@ -80,6 +83,7 @@ struct RegisterSnapshot
                 local s = ours.mnemonic
                 highlight (string &s 3) mnemonic-match?
 
+        print ours.opcode theirs.opcode
         let op-match? = (ours.opcode == theirs.opcode)
         let op =
             highlight (hex ours.opcode) op-match?
@@ -200,7 +204,6 @@ fn parse-log (path)
         assert (ins-byte-count == 5)
 
         assert (sscanf (reftoptr (line @ 90)) "%llu" &snap.cycles)
-
         'append logged-state snap
         ;
 
