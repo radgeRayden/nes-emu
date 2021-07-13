@@ -15,9 +15,9 @@ fn load-ROM (path)
     # check for magic string NES<EOF>
     let iNES? =
         and
-            (data @ 0) == (char "N")
-            (data @ 1) == (char "E")
-            (data @ 2) == (char "S")
+            (data @ 0) == (char32 "N")
+            (data @ 1) == (char32 "E")
+            (data @ 2) == (char32 "S")
             (data @ 3) == 0x1A
     # http://wiki.nesdev.com/w/index.php/NES_2.0
     let iNES2.0? =
