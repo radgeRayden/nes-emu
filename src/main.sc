@@ -37,7 +37,6 @@ fn select-ROM-file ()
             emulator = fresh-emu
         else
             print "could not load ROM file at" (string selected)
-        free selected
     case nfd.result_t.NFD_CANCEL
         ;
     default
