@@ -1,4 +1,6 @@
+from (import format) let hex
 using import Array
+using import String
 
 fn get-instruction-length (addrmode)
     switch addrmode
@@ -44,7 +46,7 @@ fn... fmt-hex (i, color? = true)
         else
             (hex i)
     if color?
-        sc_default_styler 'style-number str
+        String (sc_default_styler 'style-number (string str))
     else
         str
 

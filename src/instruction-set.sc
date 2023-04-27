@@ -1,6 +1,8 @@
 # This file contains a DSL to define instructions by addressing mode. At the moment of writing
 # it requires a header that provides the addressing mode routers, inlines that massage the operand
 # into something generic that the instruction can use unmodified.
+using import String
+from (import format) let hex
 
 sugar instruction-set (name body...)
     let header rest =
@@ -12,7 +14,7 @@ sugar instruction-set (name body...)
 
     inline gen-opcode-entry (mnemonic opcode addr-router body additional-args)
         mnemonic as:= Symbol
-        let entry-name = (Symbol ((tostring mnemonic) .. "0x" .. (hex (opcode as i32))))
+        let entry-name = (Symbol (string ((String (tostring mnemonic)) .. S"0x" .. (hex (opcode as i32)))))
         qq
             [let] [entry-name] =
                 [do]

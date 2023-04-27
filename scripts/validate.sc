@@ -1,3 +1,4 @@
+from (import format) let hex dec
 let C =  (import ..src.libc)
 using import Array
 using import Option
@@ -7,6 +8,8 @@ using import ..src.instruction-set
 using import ..src.6502-instruction-set
 using import ..src.cpu
 using import ..src.helpers
+
+run-stage;
 
 struct RegisterSnapshot
     # NOTE: due to %hhx format not being respected on windows (resulting in an overflow), we organize
@@ -36,40 +39,43 @@ struct RegisterSnapshot
                     this-type.__fields__
 
     fn __repr (self)
-        using import ..src.radlib.stringtools
+        using import strfmt
         let lo =
             try
                 fmt-hex ('unwrap self.operand-low)
             else
-                "  "
+                S"  "
         let hi =
             try
                 fmt-hex ('unwrap self.operand-high)
             else
-                "  "
+                S"  "
         s := self
         let PC A X Y P SP = (va-map fmt-hex s.PC s.A s.X s.Y s.P s.SP)
         let op = (fmt-hex s.opcode false)
         let cyc = (sc_default_styler 'style-number (tostring s.cycles))
         local mnemonic = s.mnemonic
         let flags =
-            fold (result = "") for i c in (enumerate "NV54DIZC")
+            fold (result = S"") for i c in (enumerate "NV54DIZC")
                 local c = c
                 let str = (string &c 1)
                 bit-set? := (s.P & (1 << (7 - i))) as bool
                 .. result
                     ? bit-set?
-                        sc_default_styler 'style-string str
-                        sc_default_styler 'style-comment "-"
+                        String
+                            sc_default_styler 'style-string str
+                        String
+                            sc_default_styler 'style-comment "-"
 
         f"${PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}  ${flags} CYC:${cyc}"
 
     fn display-diff (ours theirs)
         # we have to duplicate the repr code to be able to use different colors :(
-        using import ..src.radlib.stringtools
+        using import strfmt
         inline highlight (str correct?)
             if (not correct?)
-                sc_default_styler 'style-error str
+                String
+                    sc_default_styler 'style-error (string str)
             else
                 str
 
@@ -81,7 +87,7 @@ struct RegisterSnapshot
         let mnemonic =
             do
                 local s = ours.mnemonic
-                highlight (string &s 3) mnemonic-match?
+                highlight (String &s 3) mnemonic-match?
 
         print ours.opcode theirs.opcode
         let op-match? = (ours.opcode == theirs.opcode)
@@ -94,10 +100,10 @@ struct RegisterSnapshot
                 try
                     fmt-hex ('unwrap ours.operand-low)
                 else
-                    "  "
+                    S"  "
             else
                 try (highlight (fmt-hex ('unwrap ours.operand-low) false) false)
-                else (highlight "■■" false)
+                else (highlight S"■■" false)
 
         let hi-match? = (ours.operand-high == theirs.operand-high)
         let hi =
@@ -105,10 +111,10 @@ struct RegisterSnapshot
                 try
                     fmt-hex ('unwrap ours.operand-high)
                 else
-                    "  "
+                    S"  "
             else
                 try (highlight (fmt-hex ('unwrap ours.operand-high) false) false)
-                else (highlight "■■" false)
+                else (highlight S"■■" false)
 
         let A X Y P SP =
             va-map
@@ -122,27 +128,32 @@ struct RegisterSnapshot
         let cyc-match? = (ours.cycles == theirs.cycles)
         let cyc =
             if cyc-match?
-                sc_default_styler 'style-number (tostring ours.cycles)
+                String
+                    sc_default_styler 'style-number (tostring ours.cycles)
             else
-                highlight (tostring ours.cycles) false
+                highlight (dec ours.cycles) false
 
         let flags =
-            fold (result = "") for i c in (enumerate "NV54DIZC")
+            fold (result = S"") for i c in (enumerate "NV54DIZC")
                 local c = c
-                let str = (string &c 1)
+                let str = (String &c 1)
                 Abit-set? := (ours.P & (1 << (7 - i)))
                 Bbit-set? := (theirs.P & (1 << (7 - i)))
                 .. result
                     if Abit-set?
                         if Bbit-set?
-                            sc_default_styler 'style-string str
+                            String
+                                sc_default_styler 'style-string (string str)
                         else
-                            sc_default_styler 'style-error str
+                            String
+                                sc_default_styler 'style-error (string str)
                     else
                         if (not Bbit-set?)
-                            sc_default_styler 'style-comment "-"
+                            String
+                                sc_default_styler 'style-comment "-"
                         else
-                            sc_default_styler 'style-error "-"
+                            String
+                                sc_default_styler 'style-error "-"
 
         let Astr =
             ..
@@ -274,12 +285,11 @@ fn load-iNES (cpu rom)
     # the features. Must be implemented on the actual loading function.
     assert ((16 + prg-rom-size + chr-rom-size) <= (countof rom))
 
-    let memcpy = C.string.memcpy
-    let prg-romptr = (reftoptr (rom @ 0x10))
-    let prg-rom-destptr = (reftoptr (cpu.mmem @ 0x8000))
+    prg-romptr := (reftoptr (rom @ 0x10)) as (@ i8)
+    prg-rom-destptr := (reftoptr (cpu.mmem @ 0x8000)) as (mutable@ i8)
     # NOTE: we know this ROM is only 16kb, so I'm just hardcoding this for now.
     memcpy prg-rom-destptr prg-romptr prg-rom-size
-    let prg-rom-destptr = (reftoptr (cpu.mmem @ 0xc000))
+    prg-rom-destptr := (reftoptr (cpu.mmem @ 0xc000)) as (mutable@ i8)
     memcpy prg-rom-destptr prg-romptr prg-rom-size
 
 nestest-path := module-dir .. "/../validation/nes-test-roms/other/nestest.nes"
@@ -306,11 +316,12 @@ fn log-instruction (snap line)
     let mode =
         build-instruction-switch NES6502 snap.opcode
             inline (ins)
-                tostring ins.addrmode
+                String
+                    tostring ins.addrmode
     print snap "\t" mode "\t" line
 
 for i entry in (enumerate log-snapshots)
-    using import ..src.radlib.stringtools
+    using import strfmt
     using import testing
     let current = (take-register-snapshot state)
 
@@ -324,7 +335,8 @@ for i entry in (enumerate log-snapshots)
         static-if (not LOG_EVERY_INSTRUCTION)
             log-instruction current (i + 1)
     test equal?
-        f"entry ${i + 1} didn't match CPU state!"
+        string
+            f"entry ${i + 1} didn't match CPU state!"
     'step-instruction state
     ;
 
