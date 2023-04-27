@@ -88,7 +88,6 @@ struct RegisterSnapshot
                 local s = ours.mnemonic
                 highlight (String &s 3) mnemonic-match?
 
-        print ours.opcode theirs.opcode
         let op-match? = (ours.opcode == theirs.opcode)
         let op =
             highlight (hex ours.opcode) op-match?
