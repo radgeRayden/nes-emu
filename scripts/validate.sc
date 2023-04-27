@@ -26,7 +26,6 @@ struct RegisterSnapshot
     P  : u8
     SP : u8
 
-
     cycles : u64
 
     inline __== (lhsT rhsT)
@@ -252,7 +251,7 @@ fn take-register-snapshot (cpu)
         X  = cpu.RX
         Y  = cpu.RY
         PC = cpu.PC
-        SP  = cpu.RS
+        SP = cpu.RS
         P  = cpu.RP
         opcode = byte
         mnemonic = mnemonic
@@ -293,7 +292,7 @@ fn load-iNES (cpu rom)
     memcpy prg-rom-destptr prg-romptr prg-rom-size
 
 nestest-path := module-dir .. "/../validation/nes-test-roms/other/nestest.nes"
-nestest-log-path := module-dir .. "/../validation/nestest.log"
+nestest-log-path := module-dir .. "/../validation/nes-test-roms/other/nestest.log"
 let romdata =
     try
         read-whole-file nestest-path
