@@ -45,7 +45,7 @@ struct CPUState
         flags = (flags & (~ (1:u8 << flag))) | (v << flag)
 
     inline flag-set? (self flag)
-        (self.RP & (1:u8 << (flag as u8))) as bool
+        (self.RP & (1:u8 << (flag as u8))) != 0
 
     # the stack pointer indicates where the stack can write *next*;
     # this means that we write to the position where sp is, then decrement it,

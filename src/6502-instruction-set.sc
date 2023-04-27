@@ -280,6 +280,7 @@ instruction-set NES6502
     execute
         if (fset? ZF)
             branch-relative pc operand cycles
+
     # Bit Test
     instruction BIT
         0x24 -> zero-page

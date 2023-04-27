@@ -58,7 +58,7 @@ struct RegisterSnapshot
             fold (result = S"") for i c in (enumerate "NV54DIZC")
                 local c = c
                 let str = (string &c 1)
-                bit-set? := (s.P & (1 << (7 - i))) as bool
+                bit-set? := (s.P & (1 << (7 - i))) != 0
                 .. result
                     ? bit-set?
                         String
