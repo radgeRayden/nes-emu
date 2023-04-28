@@ -18,7 +18,7 @@ struct RegisterSnapshot
     opcode : u8
     operand-low  : (Option u8)
     operand-high : (Option u8)
-    mnemonic : (array i8 4)
+    mnemonic : (zarray i8 3)
 
     A  : u8
     X  : u8
@@ -49,12 +49,13 @@ struct RegisterSnapshot
                 fmt-hex ('unwrap self.operand-high)
             else
                 S"  "
+
         s := self
-        let PC A X Y P SP = (va-map fmt-hex s.PC s.A s.X s.Y s.P s.SP)
-        let op = (fmt-hex s.opcode false)
-        let cyc = (sc_default_styler 'style-number (tostring s.cycles))
-        local mnemonic = s.mnemonic
-        let flags =
+        PC A X Y P SP := (va-map fmt-hex s.PC s.A s.X s.Y s.P s.SP)
+        op  := fmt-hex s.opcode false
+        cyc := default-styler 'style-number (tostring s.cycles)
+
+        flags :=
             fold (result = S"") for i c in (enumerate "NV54DIZC")
                 local c = c
                 let str = (string &c 1)
@@ -62,11 +63,12 @@ struct RegisterSnapshot
                 .. result
                     ? bit-set?
                         String
-                            sc_default_styler 'style-string str
+                            default-styler 'style-string str
                         String
-                            sc_default_styler 'style-comment "-"
+                            default-styler 'style-comment "-"
 
-        f"${PC}  ${string &mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}  ${flags} CYC:${cyc}"
+        local mnemonic = s.mnemonic
+        f"${PC}  ${String mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} Y:${Y} P:${P} SP:${SP}  ${flags} CYC:${cyc}"
 
     fn display-diff (ours theirs)
         # we have to duplicate the repr code to be able to use different colors :(
@@ -74,7 +76,7 @@ struct RegisterSnapshot
         inline highlight (str correct?)
             if (not correct?)
                 String
-                    sc_default_styler 'style-error (string str)
+                    default-styler 'style-error (string str)
             else
                 str
 
@@ -85,8 +87,8 @@ struct RegisterSnapshot
         let mnemonic-match? = (ours.mnemonic == theirs.mnemonic)
         let mnemonic =
             do
-                local s = ours.mnemonic
-                highlight (String &s 3) mnemonic-match?
+                local mnemonic = ours.mnemonic
+                highlight (String mnemonic) mnemonic-match?
 
         let op-match? = (ours.opcode == theirs.opcode)
         let op =
@@ -127,7 +129,7 @@ struct RegisterSnapshot
         let cyc =
             if cyc-match?
                 String
-                    sc_default_styler 'style-number (tostring ours.cycles)
+                    default-styler 'style-number (tostring ours.cycles)
             else
                 highlight (dec ours.cycles) false
 
@@ -141,26 +143,26 @@ struct RegisterSnapshot
                     if Abit-set?
                         if Bbit-set?
                             String
-                                sc_default_styler 'style-string (string str)
+                                default-styler 'style-string (string str)
                         else
                             String
-                                sc_default_styler 'style-error (string str)
+                                default-styler 'style-error (string str)
                     else
                         if (not Bbit-set?)
                             String
-                                sc_default_styler 'style-comment "-"
+                                default-styler 'style-comment "-"
                         else
                             String
-                                sc_default_styler 'style-error "-"
+                                default-styler 'style-error "-"
 
         let Astr =
             ..
                 f"${PC}  ${mnemonic} ${op} ${lo} ${hi}  A:${A} X:${X} "
                 f"Y:${Y} P:${P} SP:${SP}  ${flags} CYC:${cyc}"
-        io-write! (sc_default_styler 'style-error "<<< ")
+        io-write! (default-styler 'style-error "<<< ")
         print Astr
 
-        io-write! (sc_default_styler 'style-string ">>> ")
+        io-write! (default-styler 'style-string ">>> ")
         print theirs
 
 fn parse-log (path)
@@ -240,7 +242,7 @@ fn take-register-snapshot (cpu)
 
     let mnemonic =
         do
-            local cstr : (array i8 4)
+            local cstr : (zarray i8 3)
             for i c in (enumerate mnemonic)
                 cstr @ i = c
             cstr
