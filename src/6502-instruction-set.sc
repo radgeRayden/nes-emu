@@ -28,11 +28,12 @@ using import .nes-common
 struct AbsoluteOperand plain
     addr    : u16
     mmemptr : (mutable@ u8)
-    clock : (mutable@ u64)
+    clock   : (mutable@ u64)
+
     inline __typecall (cls addr cpu)
         super-type.__typecall cls
             addr = addr
-            mmemptr = (reftoptr (cpu.mmem._items @ addr))
+            mmemptr = reftoptr (cpu.mmem._items @ addr)
             clock = &cpu.cycles
 
     inline __= (lhsT rhsT)
@@ -64,11 +65,11 @@ struct MemoryOperand plain
     inline __typecall (cls addr cpu)
         super-type.__typecall cls
             clockptr = &cpu.cycles
-            memptr = (reftoptr (cpu.mmem @ addr))
+            memptr   = reftoptr (cpu.mmem @ addr)
     inline __= (clsT otherT)
         inline (lhs rhs)
-            (ptrtoref lhs.clockptr) += 1
-            (ptrtoref lhs.memptr) = (rhs as u8)
+            ptrtoref lhs.clockptr += 1
+            ptrtoref lhs.memptr = rhs as u8
 
     inline __imply (clsT otherT)
         static-if (otherT < integer)
@@ -76,7 +77,7 @@ struct MemoryOperand plain
                 imply (deref @self.memptr) otherT
 
     inline __toref (self)
-        (ptrtoref self.clockptr) += 1
+        ptrtoref self.clockptr += 1
         imply (deref @self.memptr) u8
 
 inline page-crossed? (prev next)
@@ -120,7 +121,7 @@ inline absolute (cpu lo hi)
     AbsoluteOperand (joinLE lo hi) cpu
 
 inline absoluteX (cpu lo hi write?)
-    real-addr := (joinLE lo hi) + cpu.RX
+    real-addr  := (joinLE lo hi) + cpu.RX
     cpu.cycles += 1
     static-if write?
         # while writing, we always spend a cycle to correct hi
@@ -132,7 +133,7 @@ inline absoluteX (cpu lo hi write?)
     AbsoluteOperand ((joinLE lo hi) + cpu.RX) cpu
 
 inline absoluteY (cpu lo hi write?)
-    real-addr := (joinLE lo hi) + cpu.RY
+    real-addr  := (joinLE lo hi) + cpu.RY
     cpu.cycles += 1
     static-if write?
         # while writing, we always spend a cycle to correct hi
@@ -148,8 +149,8 @@ inline indirect (cpu lo hi)
     # here we simulate the indirect fetch bug that makes it so that
     # if the MSB is on another page, it's actually fetched from the beginning
     # of the page.
-    let cross-page? = (lo == 0xFF)
-    let iaddr = (joinLE lo hi)
+    cross-page? := lo == 0xFF
+    iaddr := joinLE lo hi
     let rl rh =
         cpu.mmem @ iaddr
         cpu.mmem @ (? cross-page? (joinLE 0x00 hi) (iaddr + 1))
@@ -160,7 +161,7 @@ inline indirect (cpu lo hi)
 
 inline indirectX (cpu lo hi)
     iaddr := (joinLE (lo + cpu.RX) 0x00) as u8 # ensure wrap around
-    let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
+    rl rh := cpu.mmem @ iaddr, cpu.mmem @ (iaddr + 1)
     # 3    pointer    R  read from the address, add X to it
     # 4   pointer+X   R  fetch effective address low
     # 5  pointer+X+1  R  fetch effective address high
@@ -168,8 +169,8 @@ inline indirectX (cpu lo hi)
     MemoryOperand (joinLE rl rh) cpu
 
 inline indirectY (cpu lo hi write?)
-    iaddr := ((joinLE lo 0x00) as u8)
-    let rl rh = (cpu.mmem @ iaddr) (cpu.mmem @ (iaddr + 1))
+    iaddr := (joinLE lo 0x00) as u8
+    rl rh := (cpu.mmem @ iaddr), (cpu.mmem @ (iaddr + 1))
     real-addr := (joinLE rl rh) + cpu.RY
     cpu.cycles += 2
     static-if write?
